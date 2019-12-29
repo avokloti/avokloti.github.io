@@ -83,11 +83,11 @@ author:
   name             : "Irina Tolkova"
   avatar           : "profile.png"
   bio              : "Your biography for the left-hand sidebar"
-  location         : "Location"
+  location         : 
   employer         :
   pubmed           : 
   googlescholar    : "https://scholar.google.com/citations?user=TwNrvMwAAAAJ&hl=en"
-  email            :
+  email            : "itolkova@g.harvard.edu"
   researchgate     : "https://www.researchgate.net/profile/Irina_Tolkova"
   uri              :
   bitbucket        :
