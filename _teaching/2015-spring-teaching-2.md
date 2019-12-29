@@ -1,20 +1,10 @@
 ---
-title: "Teaching experience 2"
+title: "Head Teaching Fellow for AM22a"
 collection: teaching
-type: "Workshop"
-permalink: /teaching/2015-spring-teaching-1
-venue: "University 1, Department"
-date: 2015-01-01
-location: "City, Country"
+type: "Undergraduate course"
+permalink: /teaching/2019-am22a
+venue: "Harvard University, Applied Math"
+date: 2019
 ---
 
-This is a description of a teaching experience. You can use markdown like any other post.
-
-Heading 1
-======
-
-Heading 2
-======
-
-Heading 3
-======
+I was the head teaching fellow for Harvard's undergraduate course Applied Math 22a: "Solving and Optimizing", which covered linear algebra, multivariate calculus, and introductory optimization. My responsibilities included teaching weekly section, holding office hours, grading, overseeing the class forum, and developing course materials.

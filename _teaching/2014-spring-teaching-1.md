@@ -1,20 +1,10 @@
 ---
-title: "Teaching experience 1"
+title: "Teaching Fellow for CS182: Introduction to Artificial Intelligence"
 collection: teaching
 type: "Undergraduate course"
-permalink: /teaching/2014-spring-teaching-1
-venue: "University 1, Department"
-date: 2014-01-01
-location: "City, Country"
+permalink: /teaching/2018-cs182
+venue: "Harvard University, Computer Science"
+date: 2018
 ---
 
-This is a description of a teaching experience. You can use markdown like any other post.
-
-Heading 1
-======
-
-Heading 2
-======
-
-Heading 3
-======
+I was a teaching fellow for Harvard's undergraduate course Computer Science 182: "Introduction to Artificial Intelligence", which covered search algorithms, Markov models, Bayesian networks, reinforcement learning, classification problems, and motion planning for robotics. My responsibilities included teaching weekly section, developing course materials, mentoring students on final projects, and overseeing the class forum.
