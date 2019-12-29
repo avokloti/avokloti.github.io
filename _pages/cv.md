@@ -11,9 +11,9 @@ redirect_from:
 
 Education
 ======
-* B.S. in GitHub, GitHub University, 2012
-* M.S. in Jekyll, GitHub University, 2014
-* Ph.D in Version Control Theory, GitHub University, 2018 (expected)
+* B.S. in Applied Math: Engineering and Physical Sciences, University of Washington, 2017
+* B.S. in Computer Science (with Honors), University of Washington, 2017
+* Ph.D in Applied Mathematics, Harvard University, 2023 (expected)
 
 Work experience
 ======
@@ -53,7 +53,3 @@ Teaching
   <ul>{% for post in site.teaching %}
     {% include archive-single-cv.html %}
   {% endfor %}</ul>
-  
-Service and leadership
-======
-* Currently signed in to 43 different slack teams
