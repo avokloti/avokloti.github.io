@@ -10,12 +10,12 @@ redirect_from:
 
 Education
 ------
-**Harvard University** (Seattle, WA)  2017-
-Ph.D in Applied Mathematics
+**Harvard University** (Seattle, WA)  2017-  
+Ph.D in Applied Mathematics  
 
-**University of Washington** (Seattle, WA)  2012-2017
-B.S. in Applied Math: Engineering and Physical Sciences
-B.S. in Computer Science with Honors
+**University of Washington** (Seattle, WA)  2012-2017  
+B.S. in Applied Math: Engineering and Physical Sciences  
+B.S. in Computer Science with Honors  
 
 Publications
 ------
