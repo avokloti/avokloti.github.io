@@ -2,6 +2,12 @@
 main:
   #- title: "Publications"
   #  url: /publications/
+    
+  - title: "Curriculum Vitae"
+    url: /cv/
+
+  - title: "Research Projects"
+    url: /research/
 
   - title: "Publications"
     url: /publications/
@@ -17,9 +23,6 @@ main:
         
   #- title: "Blog Posts"
   #  url: /year-archive/
-    
-  - title: "Curriculum Vitae"
-    url: /cv/
     
   #- title: "Guide"
   #  url: /markdown/
