@@ -48,28 +48,23 @@ $type-size-8                : 0.625em;  // ~10px
    ========================================================================== */
 
 $gray                       : #7a8288;
-$old-dark-gray              : mix(#000, $gray, 40%);
-$old-darker-gray            : mix(#000, $gray, 60%);
-$old-light-gray             : mix(#fff, $gray, 50%);
-$old-lighter-gray           : mix(#fff, $gray, 90%);
+$dark-gray                  : mix(#000, $gray, 40%);
+$darker-gray                : mix(#000, $gray, 60%);
+$light-gray                 : mix(#fff, $gray, 50%);
+$lighter-gray               : mix(#fff, $gray, 90%);
 
-$dark-gray                  : #fff;
-$darker-gray                : #fff;
-$light-gray                 : #f7f6f0;
-$lighter-gray               : #f7f6f0;
+$body-color                 : #fff;
+$background-color           : #fff;
+$code-background-color      : #fafafa;
+$code-background-color-dark : $light-gray;
+$text-color                 : $dark-gray;
+$border-color               : $lighter-gray;
 
-$body-color                 : #afc297;
-$background-color           : #a5c297;
-$code-background-color      : #89a67b;
-$code-background-color-dark : #8ea177;
-$text-color                 : mix(#000, $gray, 60%);
-$border-color               : #fff;
-
-$primary-color              : #fff;
+$primary-color              : #7a8288;
 $success-color              : #62c462;
 $warning-color              : #f89406;
 $danger-color               : #ee5f5b;
-$info-color                 : #362f82;
+$info-color                 : #52adc8;
 
 /* brands */
 $behance-color              : #1769FF;
@@ -100,7 +95,6 @@ $link-color-hover           : mix(#000, $link-color, 25%);
 $link-color-visited         : mix(#fff, $link-color, 25%);
 $masthead-link-color        : $primary-color;
 $masthead-link-color-hover  : mix(#000, $primary-color, 25%);
-
 
 /*
    Breakpoints
