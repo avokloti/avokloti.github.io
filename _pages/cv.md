@@ -1,19 +1,18 @@
 ---
 layout: archive
-title: "CV"
 permalink: /cv/
 author_profile: true
 redirect_from:
   - /resume
 ---
 
-#{% include base_path %}
+{% include base_path %}
 
 Education
 ======
-* B.S. in Applied Math: Engineering and Physical Sciences, University of Washington, 2017
-* B.S. in Computer Science (with Honors), University of Washington, 2017
-* Ph.D in Applied Mathematics, Harvard University, 2023 (expected)
+B.S. in Applied Math: Engineering and Physical Sciences, University of Washington, 2017
+B.S. in Computer Science with Honors, University of Washington, 2017
+Ph.D in Applied Mathematics, Harvard University, 2023 (expected)
 
 Publications
 ======
