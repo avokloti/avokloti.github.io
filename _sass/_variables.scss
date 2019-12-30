@@ -48,10 +48,15 @@ $type-size-8                : 0.625em;  // ~10px
    ========================================================================== */
 
 $gray                       : #7a8288;
-$dark-gray                  : mix(#000, $gray, 40%);
-$darker-gray                : mix(#000, $gray, 60%);
-$light-gray                 : mix(#fff, $gray, 50%);
-$lighter-gray               : mix(#fff, $gray, 90%);
+$old-dark-gray              : mix(#000, $gray, 40%);
+$old-darker-gray            : mix(#000, $gray, 60%);
+$old-light-gray             : mix(#fff, $gray, 50%);
+$old-lighter-gray           : mix(#fff, $gray, 90%);
+
+$dark-gray                  : mix(#000, $gray, 60%);
+$darker-gray                : mix(#000, $gray, 80%);
+$light-gray                 : mix(#fff, $gray, 30%);
+$lighter-gray               : mix(#fff, $gray, 70%);
 
 $body-color                 : #a5c297;
 $background-color           : #a5c297;
