@@ -22,7 +22,7 @@ Publications
   {% endfor %}</ul>
   
 Research experience
-  ======
+======
   * Summer 2016: NSF Research Intern
   * University of California, San Diego, CA.
   * Worked with Prof. Ryan Kastner.
