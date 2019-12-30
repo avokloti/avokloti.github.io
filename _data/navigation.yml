@@ -6,8 +6,8 @@ main:
   - title: "Curriculum Vitae"
     url: /cv/
 
-  - title: "Research Projects"
-    url: /research/
+  #- title: "Research Projects"
+  #  url: /research/
 
   - title: "Publications"
     url: /publications/
@@ -21,8 +21,8 @@ main:
   #- title: "Teaching"
   #  url: /teaching/    
     
-  #- title: "Portfolio"
-  #  url: /portfolio/
+  - title: "Portfolio"
+    url: /portfolio/
         
   #- title: "Blog Posts"
   #  url: /year-archive/
