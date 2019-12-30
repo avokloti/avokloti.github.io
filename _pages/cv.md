@@ -10,9 +10,12 @@ redirect_from:
 
 Education
 ------
-B.S. in Applied Math: Engineering and Physical Sciences, University of Washington, 2017  
-B.S. in Computer Science with Honors, University of Washington, 2017  
-Ph.D in Applied Mathematics, Harvard University, 2023 (expected)  
+**Harvard University** (Seattle, WA)  2017-
+Ph.D in Applied Mathematics
+
+**University of Washington** (Seattle, WA)  2012-2017
+B.S. in Applied Math: Engineering and Physical Sciences
+B.S. in Computer Science with Honors
 
 Publications
 ------
@@ -45,7 +48,7 @@ Research
 * I participated in a Research Experience for Undergraduates (a 10-week, NSF-funded summer research program) at the College of Earth, Ocean, and Atmospheric Sciences at Oregon State University. I modeled the distributions Pacific cod within the Bering Sea region, and examined their growth rate with respect to environmental variables. Additionally, I made a statistical simulation of the current sampling process to quantify bias in predicted growth rates due to sampling methods. This work culminated in a poster presentation at the International Conference for the Exploration of the Sea (ICES) in Copenhagen, September 2015.
 
 
-Talks
+Presentations
 ------
   <ul>{% for post in site.talks %}
     {% include archive-single-talk-cv.html %}
