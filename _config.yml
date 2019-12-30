@@ -7,7 +7,7 @@
 
 # Site Settings
 locale                   : "en-US"
-title                    : "Irina Tolkova"
+title                    : "About me"
 title_separator          : "-"
 name                     : &name "Irina Tolkova"
 description              : &description "personal description"
@@ -81,7 +81,7 @@ analytics:
 # Site Author
 author:
   name             : "Irina Tolkova"
-  avatar           : "profile.png"
+  avatar           : "profile_pic.jpg"
   bio              : "Your biography for the left-hand sidebar"
   location         : 
   employer         :
