@@ -17,18 +17,18 @@ Ph.D in Applied Mathematics
 B.S. in Applied Math: Engineering and Physical Sciences  
 B.S. in Computer Science with Honors  
 
+Research Projects
+------
+<ul>{% for post in site.portfolio %}
+{% include archive-single-talk-cv.html %}
+{% endfor %}</ul>
+
 Publications
 ------
   <ul>{% for post in site.publications %}
     {% include archive-single-cv.html %}
   {% endfor %}</ul>
   
-Research
-------
-<ul>{% for post in site.portfolio %}
-{% include archive-single-talk-cv.html %}
-{% endfor %}</ul>
-
 Presentations
 ------
   <ul>{% for post in site.talks %}
