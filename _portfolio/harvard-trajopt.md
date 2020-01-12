@@ -1,6 +1,6 @@
 ---
 title: "Graduate Research: Trajectory Optimization for Robotics"
-excerpt: "In this project (currently under completion), I wrote a general-purpose solver for trajectory optimization which took advantage of the consistent structure of problems within robotics to improve speed and robustness. <br/><img src='/images/robobee_traj.png'>"
+excerpt: "In this project (currently under completion), I wrote a general-purpose solver for trajectory optimization which took advantage of the consistent structure of problems within robotics to improve speed and robustness. <br/><img src='/images/robobee_traj.png' style='height:300px;'>"
 collection: portfolio
 ---
 

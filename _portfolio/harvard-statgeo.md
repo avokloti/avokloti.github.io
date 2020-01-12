@@ -1,6 +1,6 @@
 ---
 title: "Graduate Research: Statistical Geometry"
-excerpt: "One of my current projects focuses on methods for elastic shape analysis. <br/><img src='/images/fda1.png'>"
+excerpt: "One of my current projects focuses on methods for elastic shape analysis. <br/><img src='/images/fda1.png' style='height:300px;'>"
 collection: portfolio
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Undergraduate Thesis: Successive Convexification"
-excerpt: "<br/><img src='/images/500x300.png'>"
+excerpt: "<br/><img src='/images/500x300.png' style='height:300px;'>"
 collection: portfolio
 ---
 
