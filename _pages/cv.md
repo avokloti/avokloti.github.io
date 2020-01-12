@@ -19,7 +19,7 @@ B.S. in Computer Science with Honors
 
 Research Projects
 ------
-<ul>{% for post in site.portfolio %}
+<ul>{% for post in site.portfolio reversed %}
 {% include archive-single-talk-cv.html %}
 {% endfor %}</ul>
 
