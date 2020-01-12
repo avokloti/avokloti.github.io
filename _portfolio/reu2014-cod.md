@@ -14,4 +14,4 @@ This work was done under the guidance of Prof. Lorenzo Cianelli at the College o
 Ciannelli, Lorenzo, Irina Tolkova, Robert Lauth, Patricia Puerta, Thomas Helser, Alix Gitelman, and Grant Thompson.  
 Ecology (2019): e02907.
 
-![]('/images/ICESPoster2015.png')
+![](/images/ICESposter2015.png)
