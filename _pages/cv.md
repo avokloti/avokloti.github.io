@@ -40,6 +40,12 @@ Teaching
   <ul>{% for post in site.teaching %}
     {% include archive-single-talk-cv.html %}
   {% endfor %}</ul>
+  
+Awards
+------
+*  Outstanding Graduating Senior (Applied Math Department, University of Washington), 2017
+*  Paradise Scholarship Recipient (Robinson Center for Young Scholars), 2015
+*  Annual Dean's List (University of Washington), 2012-2017
 
 Skills
 ------

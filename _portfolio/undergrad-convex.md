@@ -1,7 +1,9 @@
 ---
-title: "Undergraduate Research: Successive Convexification"
-excerpt: "Short description of portfolio item number 1<br/><img src='/images/500x300.png'>"
+title: "Undergraduate Thesis: Successive Convexification"
+excerpt: "<br/><img src='/images/500x300.png'>"
 collection: portfolio
 ---
 
-In progress, please check back later!
+For my undergraduate thesis, I worked with Daniel Dueri and Prof. Behcet Acikmese at the Autonomous Control Laboratory, and Prof. Dieter Fox at the Robotics and State Estimation Laboratory. 
+
+My thesis is available here.

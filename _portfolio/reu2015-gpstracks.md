@@ -1,8 +1,10 @@
 ---
 title: "Summer 2015: NSF Research Intern"
-excerpt: "Short description of portfolio item number 1<br/><img src='/images/500x300.png'>"
+excerpt: "Classifying behavior states from GPS tracking data.<br/><img src='/images/500x300.png'>"
 collection: portfolio
 ---
+
+One way to learn more about the individual lives of wildlife is through GPS tracking.
 
 I participated in a Research Experience for Undergraduates at the Hatfield Marine Science Center, located on the coast of Oregon. I studied GPS tracking data of grey-headed albatrosses from Campbell Island, NZ, and developed a new method of quantifying animal foraging behavior from tracking data, and differentiating between multiple behavior states. This work culminated in a publication in PLOS ONE (2017).
 
