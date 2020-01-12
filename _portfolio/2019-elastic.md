@@ -1,6 +1,6 @@
 ---
-title: "Graduate Research: Statistical Geometry"
-excerpt: "One of my current projects focuses on methods for elastic shape analysis. <br/><img src='/images/fda1.png' style='height:300px;'>"
+title: "Elastic Curve And Shape Analysis"
+excerpt: "Ongoing project, with Prof. Lakshminarayanan Mahadevan of the Harvard Applied Math Lab. <br/><img src='/images/fda1.png' style='height:300px;'>"
 collection: portfolio
 ---
 
