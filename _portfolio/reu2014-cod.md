@@ -1,6 +1,6 @@
 ---
 title: "Summer 2014: NSF Research Intern"
-excerpt: "Statistical analysis of Pacific cod size-at-age. <br/><img src='/images/cod_distribution.png'>"
+excerpt: "Statistical analysis of Pacific cod size-at-age. <br/><img src='/images/cod_distribution.png' style='width:500px;height:600px;'>"
 collection: portfolio
 ---
 
