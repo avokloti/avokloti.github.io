@@ -10,7 +10,7 @@ redirect_from:
 
 Education
 ------
-**Harvard University** (Seattle, WA)  2017-  
+**Harvard University** (Cambridge, MA)  2017-  
 Ph.D in Applied Mathematics  
 
 **University of Washington** (Seattle, WA)  2012-2017  
@@ -43,12 +43,12 @@ Teaching
   
 Awards
 ------
-*  Outstanding Graduating Senior (Applied Math Department, University of Washington), 2017
-*  Paradise Scholarship Recipient (Robinson Center for Young Scholars), 2015
-*  Annual Dean's List (University of Washington), 2012-2017
+*  *Outstanding Graduating Senior* (Applied Math Department, University of Washington), 2017
+*  *Paradise Scholarship Recipient* (Robinson Center for Young Scholars), 2015
+*  *Annual Dean's List* (University of Washington), 2012-2017
 
 Skills
 ------
-* Programming languages: Python, C++, C, MATLAB, Java, R.
-* Some libraries / toolsets: PyTorch, Tensorflow, ROS, Drake, SNOPT, IPOPT.
-* Other: CMake, Bazel, Ubuntu, Git.
+* *Programming languages*: Python, C++, C, MATLAB, Java, R.
+* *Some libraries / toolsets*: PyTorch, Tensorflow, ROS, Drake, SNOPT, IPOPT.
+* *Other*: CMake, Bazel, Ubuntu, Git.
