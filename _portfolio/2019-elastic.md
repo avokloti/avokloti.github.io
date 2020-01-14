@@ -1,8 +1,10 @@
 ---
 title: "Elastic Curve And Shape Analysis"
-excerpt: "Ongoing project, with Prof. Lakshminarayanan Mahadevan of the Harvard Applied Math Lab. <br/><img src='/images/fda1.png' style='height:300px;'>"
+excerpt: "Ongoing project, with Prof. Lakshminarayanan Mahadevan of the Harvard Applied Math Lab. <br/><img src='/images/widener.png' style='height:300px;'>"
 collection: portfolio
 ---
+
+![](/images/fda1.png)
 
 Given a collection of objects, how can we described their mean and primary modes of variation? What are the best point-to-point alignments between curves in space, whether closed or open?  
 
