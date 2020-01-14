@@ -8,4 +8,6 @@ redirect_from:
   - /about.html
 ---
 
+![](/images/wordbird.png)
+
 Hi! I am currently a 3rd-year PhD student in applied mathematics at Harvard. My research interests span across applied math and computer science, including optimization, machine learning, robotics, statistical geometry, and acoustics. In particular, I’m very passionate about applications of these methods for sustainability, environmental monitoring, and wildlife conservation.
