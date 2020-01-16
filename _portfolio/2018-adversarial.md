@@ -7,4 +7,4 @@ collection: portfolio
 
 Our paper is available [here](/files/writing_sample_adversarial.pdf).
 
-![](/images/CS282_Final_Poster.png)
+![](/files/CS282_Final_Poster.png)
