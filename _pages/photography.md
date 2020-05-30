@@ -10,6 +10,12 @@ gallery:
     - url: "/images/bee.png"
     image_path: "/images/bee.png"
     alt: "Bee"
+    - url: "/images/bee.png"
+    image_path: "/images/bee.png"
+    alt: "Bee"
+    - url: "/images/bee.png"
+    image_path: "/images/bee.png"
+    alt: "Bee"
 ---
 
 Testing testing!
