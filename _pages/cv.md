@@ -11,7 +11,8 @@ redirect_from:
 Education
 ------
 **Harvard University** (Cambridge, MA)  2017-  
-Ph.D in Applied Mathematics  
+Ph.D Candidate in Applied Mathematics  
+MS in Applied Mathematics  (May 2020)
 
 **University of Washington** (Seattle, WA)  2012-2017  
 B.S. in Applied Math: Engineering and Physical Sciences  
@@ -43,6 +44,7 @@ Teaching
   
 Awards
 ------
+* *Certificate of Distinction in Teaching* (Harvard), Fall 2019
 *  *Outstanding Graduating Senior* (Applied Math Department, University of Washington), 2017
 *  *Paradise Scholarship Recipient* (Robinson Center for Young Scholars), 2015
 *  *Annual Dean's List* (University of Washington), 2012-2017
@@ -52,3 +54,8 @@ Skills
 * *Programming languages*: Python, C++, C, MATLAB, Java, R.
 * *Some libraries / toolsets*: PyTorch, Tensorflow, ROS, Drake, SNOPT, IPOPT.
 * *Other*: CMake, Bazel, Ubuntu, Git.
+
+Volunteering and Outreach
+------
+* Graduate mentor for unndergraduates at Harvard's Global Alliance for Medical Innovation (GAMI), 2019-
+* Tutor for Cambridge School Volunteers (weekly tutoring at a local middle school), 2018-2019.
