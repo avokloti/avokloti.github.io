@@ -12,7 +12,7 @@ Education
 ------
 **Harvard University** (Cambridge, MA)  2017-  
 Ph.D Candidate in Applied Mathematics  
-MS in Applied Mathematics  (May 2020)
+M.S. in Applied Mathematics  (May 2020)
 
 **University of Washington** (Seattle, WA)  2012-2017  
 B.S. in Applied Math: Engineering and Physical Sciences  
