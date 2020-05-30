@@ -4,17 +4,11 @@ permalink: /photography/
 author_profile: true
 
 gallery:
-  - url: "bee.png"
-    image_path: "bee.png"
+  - url: "/images/bee.jpg"
+    image_path: "/images/bee.jpg"
     alt: "Bee"
-    - url: "bee.png"
-    image_path: "bee.png"
-    alt: "Bee"
-    - url: "bee.png"
-    image_path: "bee.png"
-    alt: "Bee"
-    - url: "bee.png"
-    image_path: "bee.png"
+    - url: "/images/bee.jpg"
+    image_path: "/images/bee.jpg"
     alt: "Bee"
 ---
 
