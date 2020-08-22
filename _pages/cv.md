@@ -18,6 +18,11 @@ M.S. in Applied Mathematics  (May 2020)
 B.S. in Applied Math: Engineering and Physical Sciences  
 B.S. in Computer Science with Honors  
 
+Work Experience
+------
+Intern at the Honda Research Institute (San Jose, CA), Summer 2020
+
+
 Research Projects
 ------
 <ul>{% for post in site.portfolio reversed %}
@@ -44,7 +49,8 @@ Teaching
   
 Awards
 ------
-* *Certificate of Distinction in Teaching* (Harvard), Fall 2019
+*  *Quantitative Biology Fellowship* (Harvard), 2020-2021
+*  *Certificate of Distinction in Teaching* (Harvard), Fall 2019
 *  *Outstanding Graduating Senior* (Applied Math Department, University of Washington), 2017
 *  *Paradise Scholarship Recipient* (Robinson Center for Young Scholars), 2015
 *  *Annual Dean's List* (University of Washington), 2012-2017
@@ -52,7 +58,7 @@ Awards
 Skills
 ------
 * *Programming languages*: Python, C++, C, MATLAB, Java, R.
-* *Some libraries / toolsets*: PyTorch, Tensorflow, ROS, Drake, SNOPT, IPOPT.
+* *Some libraries / toolsets*: PyTorch, Tensorflow, ROS, Drake, optimization solvers (CVXOPT, SNOPT, IPOPT).
 * *Other*: CMake, Bazel, Ubuntu, Git.
 
 Volunteering and Outreach
