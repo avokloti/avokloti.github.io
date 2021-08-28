@@ -8,6 +8,9 @@ redirect_from:
 
 {% include base_path %}
 
+[Click here for the PDF version of my CV.](/files/cv.pdf)
+
+
 Education
 ------
 **Harvard University** (Cambridge, MA)  2017-  
@@ -20,8 +23,9 @@ B.S. in Computer Science with Honors
 
 Work Experience
 ------
-Intern at the Honda Research Institute (San Jose, CA), Summer 2020
+Intern at MathWorks, Summer 2021
 
+Intern at the Honda Research Institute, Summer 2020
 
 Research Projects
 ------
@@ -49,7 +53,9 @@ Teaching
   
 Awards
 ------
+*  *Quantitative Biology Fellowship* (Harvard), 2021-2022
 *  *Quantitative Biology Fellowship* (Harvard), 2020-2021
+*  *Certificate of Distinction in Teaching* (Harvard), Fall 2020
 *  *Certificate of Distinction in Teaching* (Harvard), Fall 2019
 *  *Outstanding Graduating Senior* (Applied Math Department, University of Washington), 2017
 *  *Paradise Scholarship Recipient* (Robinson Center for Young Scholars), 2015
