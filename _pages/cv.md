@@ -10,7 +10,6 @@ redirect_from:
 
 [Click here for the PDF version of my CV.](/files/cv.pdf)
 
-
 Education
 ------
 **Harvard University** (Cambridge, MA)  2017-  
@@ -23,9 +22,8 @@ B.S. in Computer Science with Honors
 
 Work Experience
 ------
-Intern at MathWorks, Summer 2021
-
-Intern at the Honda Research Institute, Summer 2020
+Intern at MathWorks (Summer 2021)
+Intern at the Honda Research Institute (Summer 2020)
 
 Research Projects
 ------
