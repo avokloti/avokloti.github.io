@@ -11,6 +11,20 @@ author_profile: true
 
 {% include base_path %}
 
+
 {% for post in site.publications reversed %}
-  {% include archive-single.html %}
+  <p class="archive__item-body" itemprop="headline">
+  <b>{{ post.title }}</b>
+  <br>
+  {{ post.citation }}
+  <br>
+  {% if post.link %}
+    <a href="{{ post.link }}"><i class="fas fa-fw fa-link zoom" aria-hidden="true"></i></a>
+  {% endif %}
+  {% if post.paperlink %}
+    <a href="{{ post.paperlink }}"><i class="fas fa-fw fa-file-pdf zoom" aria-hidden="true"></i></a>
+  {% endif %}
+  </p>
 {% endfor %}
+
+\* indicates equal contribution

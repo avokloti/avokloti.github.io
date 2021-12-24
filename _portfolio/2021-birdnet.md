@@ -1,7 +1,11 @@
 ---
 title: "Parsing Birdsong with Deep Audio Embeddings"
-excerpt: "Class project for CS288: AI for Social Good, spring semester of 2021. <br/><img src='/images/leaf.png' style='height:300px;'>"
+excerpt: "Class project for CS288: AI for Social Good, spring semester of 2021."
+image: "/images/birdnet_figure.png"
 collection: portfolio
+category:
+- "bioacoustics"
+- "machine learning"
 ---
 
 *This work was done with my classmates Brian Chu and Marcel Hedman as a final project for the graduate course CS288: "AI for Social Good", taught by Prof. Milind Tambe in the spring semester of 2021. Afterwards, we published a short paper and gave an oral presentation on this work at the AI4SG workshop at IJCAI 2021.*

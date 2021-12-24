@@ -1,7 +1,9 @@
 ---
 title: "Elastic Curve And Shape Analysis"
-excerpt: "Ongoing project, with Prof. Lakshminarayanan Mahadevan of the Harvard Applied Math Lab. <br/><img src='/images/widener.png' style='height:300px;'>"
+excerpt: "Ongoing project, with Prof. Lakshminarayanan Mahadevan of the Harvard Applied Math Lab."
+image: "/images/elastic_fda_figure.png"
 collection: portfolio
+category: "signal analysis"
 ---
 
 ![](/images/fda1.png)

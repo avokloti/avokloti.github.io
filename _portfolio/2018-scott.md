@@ -1,7 +1,9 @@
 ---
 title: "Robust Nonconvex Trajectory Optimization Through Iterative ADMM"
-excerpt: "Older project (currently under completion) with Prof. Scott Kuindersma of the Harvard Agile Robotics Laboratory. <br/><img src='/images/scott_lab.png' style='height:300px;'>"
+excerpt: "Older project (currently under completion) with Prof. Scott Kuindersma of the Harvard Agile Robotics Laboratory."
+image: "/images/traj_optimization_figure.png"
 collection: portfolio
+category: "optimization"
 ---
 
 *This project was done under the guidance of Prof. Scott Kuindersma at the [Agile Robotics Laboratory](https://agile.seas.harvard.edu/) at Harvard, and is undergoing final changes before submission.*

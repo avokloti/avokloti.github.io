@@ -17,11 +17,16 @@
   a {
     text-decoration: underline;
 
+    img {
+      box-shadow: 0 0 10px rgba(#000, 0.1);
+      border-radius: 10px;
+    }
+
     &:hover {
       text-decoration: underline;
 
       img {
-        box-shadow: 0 0 10px rgba(#000, 0.25);
+        box-shadow: 0 0 10px rgba(#000, 0.8);
       }
     }
   }
@@ -30,13 +35,17 @@
 .archive__subtitle {
   margin: 1.414em 0 0;
   padding-bottom: 0.5em;
-  font-size: $type-size-5;
+  font-size: $type-size-6;
   color: mix(#fff, $gray, 25%);
   border-bottom: 1px solid $border-color;
 
   + .list__item .archive__item-title {
     margin-top: 0.5em;
   }
+}
+
+.archive__item-image {
+  vertical-align: middle;
 }
 
 .archive__item-title {
@@ -60,6 +69,7 @@
 .archive__item-excerpt {
   margin-top: 0;
   font-size: $type-size-6;
+  
 
   & + p {
     text-indent: 0;
@@ -76,7 +86,7 @@
 
 .archive__item:hover {
   .archive__item-teaser {
-    box-shadow: 0 0 10px rgba(#000, 0.25);
+    /* box-shadow: 0 0 10px rgba(#000, 0.25); */
   }
 
   .archive__item-title {
@@ -121,11 +131,12 @@
 
   .archive__item-title {
     margin-top: 0.5em;
-    font-size: $type-size-5;
+    font-size: $type-size-6;
   }
 
   .archive__item-excerpt {
     display: none;
+    font-size: $type-size-6;
   }
 
   @include breakpoint($small) {

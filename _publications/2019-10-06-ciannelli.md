@@ -1,10 +1,11 @@
 ---
-title: "Spatial, interannual, and generational sources of trait variability in a marine population"
+title: "Spatial, Interannual, and Generational Sources of Trait Variability in a Marine Population"
 collection: publications
 permalink: /publication/2019-10-06-ciannelli
 date: 2019-10-06
 venue: 'Ecology'
-citation: 'Ciannelli, Lorenzo, Irina Tolkova, Robert Lauth, Patricia Puerta, Thomas Helser, Alix Gitelman, and Grant Thompson. &quot;Spatial, interannual, and generational sources of trait variability in a marine population.&quot; <i> Ecology </i> (2019).'
+citation: 'Lorenzo Ciannelli, <span style="color: blue">Irina Tolkova</span>, Robert Lauth, Patricia Puerta, Thomas Helser, Alix Gitelman, and Grant Thompson.  <br> Published in <i> Ecology </i> (2019).'
+link: "https://esajournals.onlinelibrary.wiley.com/doi/abs/10.1002/ecy.2907"
 ---
 This paper is associated with my 2014 REU project.
 
