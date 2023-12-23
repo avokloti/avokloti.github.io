@@ -9,7 +9,7 @@ Apart from my work, I like to spend time outdoors, particularly with hiking and 
 
 {% include image-gallery.html folder="/images/art" %}
 
-I like photography, particularly to convey the inexplicable beauty of the natural world. Throughout my time at Harvard, I was part of the founding leadership team of the Graduate Photo Society (and was president for 2019-2021), and have organized trips, semesterly photo competitions, guest speakers, annual family photoshoots, and filmed/photographed events for numerous organizations on campus. Here's a small gallery of photos I had on hand from over the years -- more coming soon!
+I like photography, particularly to convey the inexplicable beauty of the natural world. Throughout my time at Harvard, I was part of the founding leadership team of the Graduate Photo Society, and subsequently the group's president from 2019 to 2021. During that time, I have organized trips, semesterly photo competitions, guest speakers, annual family photoshoots, and filmed/photographed events for numerous organizations on campus. Here's a small gallery of photos I had on hand from over the years -- more coming soon!
 
 {% include image-gallery.html folder="/images/photos" %}
 

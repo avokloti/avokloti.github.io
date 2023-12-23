@@ -29,7 +29,7 @@ comments:
   facebook:
     appid                :
     num_posts            : # 5 (default)
-    colorscheme          : # "light" (default), "dark"
+    colorscheme          : "dark" # "light" (default), "dark"
 staticman:
   allowedFields          : ['name', 'email', 'url', 'message']
   branch                 : "master" # "gh-pages"
@@ -87,7 +87,7 @@ author:
   employer         :
   pubmed           : 
   googlescholar    : "https://scholar.google.com/citations?user=TwNrvMwAAAAJ&hl=en"
-  email            : "itolkova@g.harvard.edu"
+  email            : "itolkova@cornell.edu"
   researchgate     : 
   uri              :
   bitbucket        :

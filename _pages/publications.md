@@ -5,9 +5,9 @@ permalink: /publications/
 author_profile: true
 ---
 
-{% if author.googlescholar %}
-  You can also find my articles on <u><a href="{{author.googlescholar}}">my Google Scholar profile</a>.</u>
-{% endif %}
+I try to keep this page updated, though my most up-to-date publication list can be found at my <a href="https://scholar.google.com/citations?user=TwNrvMwAAAAJ&hl=en">Google Scholar</a> profile. If you would like to talk about any of these papers, please feel free to reach out.
+
+<i>\* indicates shared first-authorship</i>
 
 {% include base_path %}
 
@@ -26,5 +26,3 @@ author_profile: true
   {% endif %}
   </p>
 {% endfor %}
-
-\* indicates equal contribution
