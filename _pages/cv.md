@@ -2,6 +2,9 @@
 layout: archive
 permalink: /cv/
 author_profile: true
+header:
+  image: /banners/hyak.png
+  caption: Snoqualmie Pass, WA (2021)
 redirect_from:
   - /resume
 ---

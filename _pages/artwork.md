@@ -3,6 +3,9 @@ layout: archive
 title: "Artwork"
 permalink: /artwork/
 author_profile: true
+header:
+  image: /banners/canyonlands.png
+  caption: Canyonlands National Park, UT (2023)
 ---
 
 Apart from my work, I really enjoy **art and photography** --  particularly to convey the inexplicable beauty of the natural world. I like to sketch with pen or pencil, have explored digital and vector graphics, and have some past experience with oil painting and pastels. Below are some of my sketches, along with a charcoal portrait of my grandfather.
