@@ -182,7 +182,7 @@
     margin: 0 1rem;
     padding: 0.5rem 0;
     color: $masthead-link-color;
-    text-decoration: none;
+    /*text-decoration: none;*/
 
     &:hover {
       color: $masthead-link-color-hover;
@@ -196,7 +196,7 @@
     padding: 0 0.5rem;
     border: 0;
     outline: none;
-    background-color: $primary-color;
+    background-color: $contrast-color;
     color: #fff;
     cursor: pointer;
   }
@@ -255,9 +255,9 @@
     right: 0;
     margin-top: 15px;
     padding: 5px;
-    border: 1px solid $border-color;
+    border: 2px solid $border-color;
     border-radius: $border-radius;
-    background: #fff;
+    background: $contrast-color;
     box-shadow: 0 0 10px rgba(#000, 0.25);
 
     a {
@@ -267,19 +267,20 @@
 
       &:hover {
         color: $masthead-link-color-hover;
-        background: mix(#fff, $primary-color, 75%);
+        background: $contrast-color; /*mix(#fff, $primary-color, 75%);*/
+        font-weight:bold;
       }
     }
 
     &:before {
       content: "";
       position: absolute;
-      top: -11px;
+      top: -12px;
       right: 10px;
       width: 0;
       border-style: solid;
       border-width: 0 10px 10px;
-      border-color: $border-color transparent;
+      border-color: #fff transparent;
       display: block;
       z-index: 0;
     }
@@ -292,7 +293,7 @@
       width: 0;
       border-style: solid;
       border-width: 0 10px 10px;
-      border-color: #fff transparent;
+      border-color:  $contrast-color transparent;
       display: block;
       z-index: 1;
     }

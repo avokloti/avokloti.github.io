@@ -17,6 +17,7 @@
     @include clearfix;
     padding: 1em 1em 1em;
     font-family: $sans-serif-narrow;
+    background: $contrast-color;
 
     @include breakpoint($x-large) {
       max-width: $x-large;
@@ -39,10 +40,12 @@
     padding: 0;
     clear: both;
     list-style-type: none;
+    background: $contrast-color;
   }
 }
 
 .masthead__menu-item {
+  background: $contrast-color;
   display: block;
   list-style-type: none;
   white-space: nowrap;
