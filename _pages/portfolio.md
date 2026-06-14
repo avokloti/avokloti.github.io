@@ -17,3 +17,6 @@ My primary research is in improving **bioacoustic monitoring** systems, with a f
 {% for post in ordered_posts reversed %}
         {% include archive-single.html type="grid" %}
 {% endfor %}
+
+<nbsp>
+
