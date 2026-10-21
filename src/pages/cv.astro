@@ -1,0 +1,32 @@
+---
+import Base from '../layouts/Base.astro';
+import { cv } from '../lib/data';
+---
+<Base title="CV" banner="/images/banners/kauai.jpg" caption="Kauaʻi, Hawaiʻi, 2022">
+  <div class="prose">
+    <h1>Curriculum vitae</h1>
+  </div>
+
+  {cv.sections.map((s) => (
+    <section class="cv-section">
+      <h2>{s.title}</h2>
+      <ol class:list={['cv-list', { 'cv-list--compact': s.compact }]}>
+        {s.items.map((it) => (
+          <li>
+            <span class="cv-when">{it.when}</span>
+            <div class="cv-what">
+              <p class="cv-title">{it.what}</p>
+              {it.where && <p class="cv-where">{it.where}</p>}
+              {it.detail && <p class="cv-detail">{it.detail}</p>}
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  ))}
+
+  <section class="cv-download">
+    <a class="button" href="/files/cv.pdf">Download full CV (PDF)</a>
+    <p class="muted">Updated {cv.updated}. Please see the PDF above for grants, internships, awards, invited talks, service, etc; please check <a href="/publications/">publications</a>, <a href="/teaching/">teaching</a>, and <a href="/mentorship/">mentoring</a> for more detail.</p>
+  </section>
+</Base>

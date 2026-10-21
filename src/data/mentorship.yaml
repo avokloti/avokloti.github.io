@@ -1,0 +1,83 @@
+# Mentorship gallery. Posters live in public/images/mentorship/<image>.jpg
+# (plus a <image>-thumb.jpg). Students without a poster go under `others`.
+
+intro: >-
+  I’ve had the honor of working with some excellent students from
+  Cornell and beyond — here are some of their projects! If you are an undergraduate
+  student interested in using mathematics and computer science for wildlife
+  conservation, please don’t hesitate to reach out.
+
+posters:
+  - image: dhar-poaching
+    title: Fighting poaching through deep learning and sensor integration
+    students: Naveen Dhar
+    institution: High Tech High Mesa, San Diego, CA
+    years: 2025–2026
+    description: >-
+      Independent research focused on gunshot detection in rainforest environments;
+      manifested in an oral presentation at ASA (Dec 2025), published conference paper
+      at NeurIPS Workshop on Animal Communication (Dec 2025), press release, and podcast
+      appearance on Scientific American’s Science Quickly.
+
+  - image: array-optimization
+    title: Optimizing microphone placement for bioacoustic localization using genetic algorithms and gradient descent
+    students: Akashram, Rucha Parekh, Arham Bafna
+    institution: Dwarkadas J. Sanghvi College of Engineering, India
+    years: 2025–2026
+    description: >-
+      Together with Akashram, this computer science capstone group project focused on
+      array optimization for bioacoustic localization.
+
+  - image: birdnet-embeddings
+    title: "What do BirdNET embeddings capture: The singer, the song, or the setting?"
+    students: Akashram
+    institution: Dwarkadas J. Sanghvi College of Engineering, India
+    years: 2025–2026
+    description: >-
+      Independent research focused on characterizing the effects of various parameters
+      on BirdNET embeddings.
+
+  - image: bird-counts
+    title: Estimating bird counts with bioacoustics
+    students: Lillian Wang
+    institution: Cornell University
+    years: "2025"
+    description: >-
+      Funded 10-week summer research internship focused on exploring techniques for
+      automated acoustic abundance estimation of birds in Sapsucker Woods.
+
+  - image: four-channel-recorder
+    title: Designing a four-channel audio recorder for acoustic localization
+    students: Ivan Mokeyev
+    institution: Cornell University
+    years: "2025"
+    description: >-
+      Funded 10-week summer research internship focused on designing a board for
+      multichannel audio recording, as well as computationally evaluating the efficacy
+      of different designs for acoustic localization.
+
+others:
+  - name: Enrico Breviglieri
+    institution: São Paulo State University, Brazil
+    years: 2024–2025
+    description: >-
+      Supported in mentorship on machine learning for an undergraduate thesis on
+      evaluating acoustic sexual dimorphism in Cerrado antbird species; published in
+      the Journal of Ornithology (2026).
+  - name: Ambrose Blay
+    institution: Cornell University
+    years: "2024"
+    description: >-
+      Funded 10-week summer research internship focused on evaluating acoustic
+      localization with two tetrahedral microphones – including simulation, recording
+      and analysis of natural soundscapes, and controlled playback experiments.
+
+programs:
+  - name: BEAT mentor
+    url: https://www.birds.cornell.edu/ccb/beat-a-bioacoustics-learning-community-for-indonesia-and-malaysia/
+    institution: Bioacoustics Equipment and Training program, Cornell K. Lisa Yang Center for Conservation Bioacoustics
+    years: 2023, 2026
+    description: >-
+      Supported teams in the 2023 and 2026 cohorts of BEAT, a learning community for
+      practitioners in Indonesia and Malaysia aiming to use bioacoustics for
+      conservation projects.

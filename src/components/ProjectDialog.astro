@@ -1,0 +1,109 @@
+---
+// One shared pop-up for project write-ups. Each project's content sits in a
+// <template>, so its figures load only when that project is opened.
+import NewsList from './NewsList.astro';
+import { newsFor, articleSections } from '../lib/data';
+const { projects, themes } = Astro.props;
+const themeTitle = (id: string) => themes.find((t: any) => t.id === id)?.title ?? '';
+const bodyHtml = (p: any) => {
+  const html: string = p.rendered?.html ?? '';
+  // The teaser figure is shown at the top, so drop it if the write-up repeats it.
+  const file = p.data.image.split('/').pop();
+  return html.replace(new RegExp(`<p>\\s*<img[^>]*${file.replace('.', '\\.')}[^>]*>\\s*</p>`, 'g'), '');
+};
+---
+{projects.map((p: any) => (
+  <template id={`tpl-${p.id}`}>
+    <figure class="pd__fig"><img src={p.data.image} alt="" /></figure>
+    <p class="pd__meta">{themeTitle(p.data.theme)}, {p.data.year}</p>
+    <h2 class="pd__title" id="pd-title">{p.data.title}</h2>
+    {p.data.excerpt && <p class="pd__excerpt">{p.data.excerpt}</p>}
+    <div class="prose pd__body" set:html={bodyHtml(p)} />
+    {articleSections(p.data.articles, p.data.image).map((sec) => (
+      <section class="pd__news"><h3>{sec.heading}</h3><NewsList items={sec.items} /></section>
+    ))}
+    {newsFor(p.id).length > 0 && (
+      <section class="pd__news"><h3>In the news</h3><NewsList items={newsFor(p.id)} /></section>
+    )}
+  </template>
+))}
+
+<dialog class="pd" id="project-dialog" aria-labelledby="pd-title">
+  <div class="pd__bar"><button class="pd__close" type="button" aria-label="Close project">
+    <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>
+  </button></div>
+  <div class="pd__inner"></div>
+</dialog>
+
+<script is:inline>
+(() => {
+  const dialog = document.getElementById('project-dialog');
+  const inner = dialog.querySelector('.pd__inner');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  let openId = null, pushed = false, lastCard = null;
+
+  const cardImg = (id) => document.querySelector(`[data-project="${id}"] img`);
+  const withTransition = (update) => {
+    if (!document.startViewTransition || reduce.matches) { update(); return; }
+    document.startViewTransition(update);
+  };
+
+  function open(id, { push = true } = {}) {
+    const tpl = document.getElementById('tpl-' + id);
+    if (!tpl) return false;
+    const img = cardImg(id);
+    lastCard = img ? img.closest('a') : null;
+    if (img) img.style.viewTransitionName = 'project-figure';
+    withTransition(() => {
+      if (img) img.style.viewTransitionName = '';
+      inner.replaceChildren(tpl.content.cloneNode(true));
+      // A news photo hosted elsewhere that fails to load reveals the local image behind it.
+      inner.querySelectorAll('img[data-remote]').forEach((img) => img.addEventListener('error', () => img.remove()));
+      inner.querySelector('.pd__fig img').style.viewTransitionName = 'project-figure';
+      if (!dialog.open) dialog.showModal();
+      dialog.scrollTop = 0;
+    });
+    openId = id;
+    if (push) { history.pushState({ project: id }, '', '#' + id); pushed = true; }
+    return true;
+  }
+
+  function close({ fromHistory = false } = {}) {
+    if (!openId) return;
+    const id = openId, img = cardImg(id);
+    openId = null;
+    withTransition(() => {
+      dialog.close();
+      inner.replaceChildren();
+      if (img) img.style.viewTransitionName = 'project-figure';
+    });
+    setTimeout(() => { if (img) img.style.viewTransitionName = ''; }, 600);
+    if (lastCard) lastCard.focus({ preventScroll: true });
+    if (!fromHistory) {
+      if (pushed) history.back();
+      else history.replaceState(null, '', location.pathname + location.search);
+    }
+    pushed = false;
+  }
+
+  document.addEventListener('click', (e) => {
+    const card = e.target.closest('[data-project]');
+    if (!card || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+    e.preventDefault();
+    open(card.dataset.project);
+  });
+  dialog.querySelector('.pd__close').addEventListener('click', () => close());
+  dialog.addEventListener('cancel', (e) => { e.preventDefault(); close(); });   // Esc
+  dialog.addEventListener('click', (e) => { if (e.target === dialog) close(); }); // backdrop
+
+  addEventListener('popstate', () => {
+    const id = location.hash.slice(1);
+    if (document.getElementById('tpl-' + id)) { if (id !== openId) open(id, { push: false }); }
+    else close({ fromHistory: true });
+  });
+
+  // A link straight to a project (…/research/#2023-guam) opens it.
+  const start = location.hash.slice(1);
+  if (start && document.getElementById('tpl-' + start)) open(start, { push: false });
+})();
+</script>

@@ -1,0 +1,92 @@
+{
+  "/images/banners/canyonlands.jpg": {
+    "light": [
+      "#d8cec9",
+      "#dfe4ed"
+    ],
+    "dark": [
+      "#2b231c",
+      "#18232c"
+    ]
+  },
+  "/images/banners/cape_cod_seashore.jpg": {
+    "light": [
+      "#dedacf",
+      "#e6e5e0"
+    ],
+    "dark": [
+      "#323223",
+      "#20241c"
+    ]
+  },
+  "/images/banners/chief_mountain.jpg": {
+    "light": [
+      "#d3d7cb",
+      "#e5ebf6"
+    ],
+    "dark": [
+      "#252e1e",
+      "#1f2c38"
+    ]
+  },
+  "/images/banners/hyak.jpg": {
+    "light": [
+      "#d4dbe8",
+      "#e9edf3"
+    ],
+    "dark": [
+      "#263340",
+      "#242e34"
+    ]
+  },
+  "/images/banners/kauai.jpg": {
+    "light": [
+      "#d7dac9",
+      "#dde3ed"
+    ],
+    "dark": [
+      "#2a311d",
+      "#15212c"
+    ]
+  },
+  "/images/banners/langurs.jpg": {
+    "light": [
+      "#d7d3d0",
+      "#ecebe8"
+    ],
+    "dark": [
+      "#2a2925",
+      "#282b27"
+    ]
+  },
+  "/images/banners/mt_lafayette.jpg": {
+    "light": [
+      "#cacacb",
+      "#e3e5e8"
+    ],
+    "dark": [
+      "#1b1f1f",
+      "#1d2426"
+    ]
+  },
+  "/images/banners/widener_library.jpg": {
+    "light": [
+      "#e9eaea",
+      "#dedddc"
+    ],
+    "dark": [
+      "#3f4443",
+      "#171b18"
+    ]
+  },
+  "/images/banners/yosemite.jpg": {
+    "light": [
+      "#dfdfde",
+      "#e3edfa"
+    ],
+    "dark": [
+      "#333735",
+      "#1d2f3c"
+    ]
+  }
+}

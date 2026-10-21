@@ -1,0 +1,122 @@
+[
+  {
+    "id": "marine",
+    "title": "Marine Bioacoustics",
+    "blurb": "How can we detect, locate, and count whales with arrays of hydrophones? In the marine domain, I have worked on monitoring whales with wide-aperture arrays at sites in the Atlantic, Western Pacific, and Arctic oceans.",
+    "icon": "water",
+    "home_blurb": "How can we detect, locate, and count whales with arrays of hydrophones?",
+    "home_image": "/images/home/whale-vertebrae.jpg",
+    "home_image_alt": "Whale vertebrae half-buried in dark sand on an Arctic beach",
+    "groups": [
+      {
+        "id": "bowhead-whales",
+        "title": "Bowhead Whales",
+        "since": 2024,
+        "sketch": "/images/whales/bowhead.png",
+        "sketch_alt": "Illustration of a bowhead whale (Voices in the Sea)",
+        "projects": [
+          "2024-bowheads"
+        ]
+      },
+      {
+        "id": "right-whales",
+        "title": "North Atlantic Right Whales",
+        "since": 2022,
+        "sketch": "/images/whales/right-whale.png",
+        "sketch_alt": "Illustration of a North Atlantic right whale",
+        "projects": [
+          "2024-narw_id",
+          "2022-narw"
+        ]
+      },
+      {
+        "id": "beaked-whales",
+        "title": "Beaked Whales",
+        "since": 2023,
+        "sketch": "/images/whales/beaked-whale.png",
+        "sketch_alt": "Illustration of a Cuvier’s beaked whale",
+        "projects": [
+          "2023-guam"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "terrestrial",
+    "title": "Terrestrial Bioacoustics",
+    "blurb": "How can we improve passive monitoring of birds and other vocal animals through integrating principles across physical acoustics, array processing, and machine learning? On land, my work has focused on using compact microphone arrays to add a spatial dimension to bioacoustic monitoring, alongside explorations of learning useful representations of animal vocalizations.",
+    "icon": "mountain",
+    "home_blurb": "How can we improve passive monitoring of birds and other vocal animals through integrating principles across physical acoustics, array processing, and machine learning?",
+    "home_image": "/images/home/swiftone-sunrise.jpg",
+    "home_image_alt": "A SwiftOne acoustic recorder held up against a sunrise over grassland",
+    "groups": [
+      {
+        "id": "compact-arrays",
+        "title": "Compact Microphone Arrays",
+        "sketch": "/images/research-keys/tetrahedral-mic.png",
+        "sketch_alt": "Diagram of a tetrahedral microphone array estimating the direction of a singing bird",
+        "projects": [
+          "2022-sourceseparation",
+          "2022-wild_soundscapes"
+        ],
+        "figure": true
+      },
+      {
+        "id": "representation-learning",
+        "title": "Representation Learning",
+        "sketch": "/images/research-keys/birdsong-embeddings.png",
+        "sketch_alt": "Clusters of birdsong embeddings linked to example spectrograms",
+        "projects": [
+          "2021-birdnet",
+          "2019-dae"
+        ],
+        "figure": true
+      },
+      {
+        "id": "ecosystem-change",
+        "title": "Ecosystem Change",
+        "sketch": "/images/swift.jpg",
+        "photo": true,
+        "sketch_alt": "An acoustic recorder mounted on a tree in grassland near Chief Mountain",
+        "projects": [
+          "2023-bison"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "robotics",
+    "title": "Robotics",
+    "blurb": "In late undergraduate and early graduate research, I worked on trajectory optimization and planning for systems including quadrotor drones, bipedal robots, and manipulator arms. While I am still very fond of optimization algorithms, there were no opportunities to contribute to wildlife conservation, and I pivoted my work to bioacoustics.",
+    "icon": "robot",
+    "groups": [
+      {
+        "id": "trajectory-optimization",
+        "title": "Trajectory Optimization",
+        "sketch": "/images/research-keys/agile-robotics-lab.jpg",
+        "sketch_alt": "The Harvard Agile Robotics Laboratory with a Cassie robot",
+        "projects": [
+          "2019-robobee",
+          "2018-scott",
+          "2017-convex"
+        ],
+        "photo": true
+      }
+    ],
+    "home": false
+  },
+  {
+    "id": "quantitative-ecology",
+    "title": "Quantitative ecology",
+    "earlier": true,
+    "blurb": "Statistical and machine learning methods for animal populations, movement, growth, and calls.",
+    "icon": "seedling"
+  },
+  {
+    "id": "other",
+    "title": "Other projects",
+    "earlier": true,
+    "blurb": "Shorter projects in image analysis, gait analysis, and robust machine learning.",
+    "icon": "square-root-variable"
+  }
+]

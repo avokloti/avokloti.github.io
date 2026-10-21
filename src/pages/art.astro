@@ -1,0 +1,92 @@
+---
+import Base from '../layouts/Base.astro';
+import site from '../data/site.json';
+import gallery from '../data/gallery.json';
+import Lightbox from '../components/Lightbox.astro';
+
+const film = {
+  title: 'The Frog Barn: Engineering for Wildlife Conservation',
+  date: 'March 2025',
+  href: 'https://www.birds.cornell.edu/ccb/the-frog-barn-engineering-for-wildlife-conservation/',
+  // YouTube's thumbnail first; your own still shows if YouTube can't be reached.
+  still: 'https://img.youtube.com/vi/9ieQ9Qlpt2s/maxresdefault.jpg',
+  fallback: '/images/frog-barn-still.jpg',
+  blurb: 'In a barn in the woods of upstate New York, a small team of engineers builds the acoustic recorders that scientists use to listen to birds, whales, elephants, frogs, and bats around the world. This film follows their work.',
+};
+
+const book = {
+  title: 'Mathematical Adventures of Igor and Ira',
+  author: 'Elena Tolkova',
+  date: 'May 2021',
+  href: 'https://www.amazon.com/dp/B095LM7KV7',
+  cover: '/images/igor-and-ira-cover.jpg',
+  blurb: 'Stories of princes, geometry, robbers, combinatorics, rhinoceroses, set theory, and beyond... For those who like adventurous fairy tales, and for those who like mathematics.',
+};
+
+const sets = [
+  { id: 'drawings', title: 'Drawings', items: gallery.art.map((i) => ({ ...i, dir: 'art' })) },
+  { id: 'photography', title: 'Photography', items: gallery.photos.map((i) => ({ ...i, dir: 'photos' })) },
+];
+---
+<Base title="Art" banner="/images/banners/canyonlands.jpg" caption="Canyonlands National Park, Utah, 2023">
+  <div class="prose">
+    <h1>Art, photography, and film</h1>
+    <p>Outside of research, I'm an avid hiker, runner, and backpacker, and try to spend as much time as I can in wild places. I try to convey the awe of our planet and its creatures through sketches and photos. I'm also learning filmmaking, and have made my first documentary film!</p>
+  </div>
+
+  <section class="art-set" id="film">
+    <div class="prose"><h2>Film</h2></div>
+    <a class="film" href={film.href}>
+      <div class="film__still">
+        <img class="film__fallback" src={film.fallback} alt="" loading="lazy" />
+        <img class="film__yt" src={film.still} alt="" loading="lazy" data-remote />
+        <span class="film__play" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>
+        </span>
+      </div>
+      <div class="film__text">
+        <h3>{film.title}</h3>
+        <p class="film__meta">Short documentary, {film.date}</p>
+        <p>{film.blurb}</p>
+        <span class="film__cta">Watch the film and read the story</span>
+      </div>
+    </a>
+  </section>
+
+  <section class="art-set" id="book">
+    <div class="prose"><h2>Book illustration</h2></div>
+    <a class="book" href={book.href}>
+      <div class="book__cover"><img src={book.cover} width="667" height="1000" alt={`Cover of ${book.title}`} loading="lazy" /></div>
+      <div class="film__text">
+        <h3>{book.title}</h3>
+        <p class="film__meta">Written by {book.author}, illustrated by me, {book.date}</p>
+        <p>{book.blurb}</p>
+        <span class="film__cta">See the book on Amazon</span>
+      </div>
+    </a>
+  </section>
+
+  {sets.map((set) => (
+    <section class="art-set" id={set.id}>
+      <div class="prose">
+        <h2>{set.title}</h2>
+        {set.id === 'drawings' && <p class="muted">I mostly sketch in pen and pencil, sometimes wandering to digital illustration, and have painted in oil and pastel. Here are some wildlife sketches, and a charcoal portrait of my grandfather.</p>}
+        {set.id === 'photography' && (
+          <p class="muted">During my PhD, I co-founded and led Harvard’s graduate photography society for a few years, organizing trips, competitions, guest speakers, and photographing events across campus.</p>
+        )}
+      </div>
+      <ul class="masonry" data-gallery>
+        {set.items.map((it) => (
+          <li>
+            <a class="art" href={`/images/${it.dir}/${it.slug}.jpg`} data-lightbox data-title={it.title}>
+              <img src={`/images/${it.dir}/${it.slug}-thumb.jpg`} width={it.w} height={it.h} alt={it.title} loading="lazy" />
+              <span>{it.title}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+
+  <Lightbox />
+</Base>

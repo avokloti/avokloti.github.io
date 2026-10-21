@@ -1,0 +1,30 @@
+# Press coverage, newest first. `project` links an item to a Research project
+# (its file name). `image` is the article's own preview image; `fallback` is a
+# local image shown if that can't load.
+- outlet: Acoustical Society of America
+  title: Neural network helps detect gunshots from illegal rainforest poaching
+  date: December 2025
+  url: https://acoustics.org/neural-network-helps-detect-gunshots-from-illegal-rainforest-poaching/
+  image: https://acoustics.org/wp-content/uploads/2025/11/w749_2333058_2psp8_elephant_poaching_fig1.jpeg
+  fallback: /images/mentorship/dhar-poaching-thumb.jpg
+- outlet: KNBA
+  title: Scientists and Inupiaq hunters count bowhead whales. So far, the numbers seem to be on the rise.
+  date: May 2025
+  url: https://www.knba.org/news/2025-05-29/scientists-and-inupiaq-hunters-count-bowhead-whales-so-far-the-numbers-seem-to-be-on-the-rise
+  image: https://npr.brightspotcdn.com/dims4/default/36fb0e9/2147483647/strip/true/crop/3849x2021+0+433/resize/1200x630!/quality/90/?url=http%3A%2F%2Fnpr-brightspot.s3.amazonaws.com%2F75%2F6e%2Ff7fd3eed48758be3cd8a9665853b%2Fperch4-straightened.jpg
+  fallback: /images/bowhead_sites_map.jpg
+  project: 2024-bowheads
+- outlet: Mongabay
+  title: Counting whales by eavesdropping on their chatter, with help from machine learning
+  date: March 2025
+  url: https://news.mongabay.com/2025/03/counting-whales-by-eavesdropping-on-their-chatter-with-help-from-machine-learning/
+  image: https://imgs.mongabay.com/wp-content/uploads/sites/20/2025/03/18103347/Anim1751_-_Flickr_-_NOAA_Photo_Library-2400x890-1.jpg
+  fallback: /images/narw_workflow.jpg
+  project: 2022-narw
+- outlet: Cornell Chronicle
+  title: New study advances acoustic monitoring of endangered whale
+  date: February 2025
+  url: https://news.cornell.edu/stories/2025/02/new-study-advances-acoustic-monitoring-endangered-whale
+  image: https://news.cornell.edu/sites/default/files/styles/story_thumbnail_lg/public/2019-11/1119_whale2.jpg?itok=7LjXfUwl
+  fallback: /images/narw_in_ccb.jpg
+  project: 2022-narw

@@ -1,1 +1,3 @@
-Welcome to my website! It is based on a GitHub Pages template for academic websites by [Stuart Geiger](https://github.com/staeiou), which was forked (then detached) from the [Minimal Mistakes Jekyll Theme](https://mmistakes.github.io/minimal-mistakes/), which is © 2016 Michael Rose and released under the MIT License. See LICENSE.md.
+# Irina Tolkova's website (new and improved Astro edition).
+
+Thanks for visiting my site! Implemented with the help of Claude Opus 5.5.

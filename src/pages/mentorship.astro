@@ -1,0 +1,65 @@
+---
+import Base from '../layouts/Base.astro';
+import Lightbox from '../components/Lightbox.astro';
+import { mentorship } from '../lib/data';
+---
+<Base title="Mentorship" banner="/images/banners/langurs.jpg" bannerPos="center 72%">
+  <div class="prose">
+    <h1>Mentorship</h1>
+    <p>{mentorship.intro}</p>
+  </div>
+
+  <ul class="poster-grid" data-gallery>
+    {mentorship.posters.map((p) => (
+      <li class="poster">
+        <a class="poster__fig" href={`/images/mentorship/${p.image}.jpg`} data-lightbox data-fullsize data-title={p.title}>
+          <img src={`/images/mentorship/${p.image}-thumb.jpg`} width="600" height="800" alt={`Poster: ${p.title}`} loading="lazy" />
+        </a>
+        <div class="poster__text">
+          <p class="poster__students">{p.students}</p>
+          <p class="poster__level">{p.institution}, {p.years}</p>
+          <h2 class="poster__title">{p.title}</h2>
+          <p class="poster__outcome">{p.description}</p>
+        </div>
+      </li>
+    ))}
+  </ul>
+
+  {mentorship.others.length > 0 && (
+    <section class="cv-section">
+      <h2>Other students</h2>
+      <ol class="cv-list">
+        {mentorship.others.map((o) => (
+          <li>
+            <span class="cv-when">{o.years}</span>
+            <div class="cv-what">
+              <p class="cv-title">{o.name}</p>
+              <p class="cv-where">{o.institution}</p>
+              <p class="cv-detail">{o.description}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  )}
+
+  {mentorship.programs && mentorship.programs.length > 0 && (
+    <section class="cv-section">
+      <h2>Mentoring programs</h2>
+      <ol class="cv-list">
+        {mentorship.programs.map((o) => (
+          <li>
+            <span class="cv-when">{o.years}</span>
+            <div class="cv-what">
+              <p class="cv-title">{o.url ? <a href={o.url}>{o.name}</a> : o.name}</p>
+              <p class="cv-where">{o.institution}</p>
+              <p class="cv-detail">{o.description}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  )}
+
+  <Lightbox />
+</Base>

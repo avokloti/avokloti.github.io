@@ -1,0 +1,40 @@
+---
+// One species within a research theme: a sketch, the projects (which open in
+// the project pop-up), and optionally linked journal articles.
+import NewsList from './NewsList.astro';
+import { publications } from '../lib/data';
+const { group, projects } = Astro.props;
+const items = group.projects.map((id: string) => projects.find((p: any) => p.id === id)).filter(Boolean);
+const articles = (group.articles ?? []).map((a: { pub: string; thumb: string; outlet?: string }) => {
+  const pub = publications.find((p) => p.id === a.pub)!;
+  return {
+    outlet: a.outlet ?? (pub.venue ?? '').split(',')[0],
+    title: pub.title,
+    date: String(pub.year),
+    url: pub.links?.[0]?.url ?? '#',
+    fallback: a.thumb,
+  };
+});
+---
+<article class="species" id={group.id}>
+  <div class:list={["species__sketch", { "species__sketch--photo": group.photo, "species__sketch--figure": group.figure }]}><img src={group.sketch} alt={group.sketch_alt} title={group.sketch_alt} loading="lazy" /></div>
+  <div class="species__body">
+    <h3>{group.title} {group.since && <span class="species__years">{group.since}–present</span>}</h3>
+    <ul class="species__projects">
+      {items.map((p: any) => (
+        <li>
+          <a href={`/research/${p.id}/`} data-project={p.id}>
+            <span class="species__ptitle">{p.data.title}</span>
+            <span class="species__pyear">{p.data.year}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+    {articles.length > 0 && (
+      <div class="species__articles">
+        <h4>{group.articles_label ?? 'Articles'}</h4>
+        <NewsList items={articles} />
+      </div>
+    )}
+  </div>
+</article>

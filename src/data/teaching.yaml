@@ -1,0 +1,68 @@
+# Teaching page. Source: CV (March 2026).
+intro: >-
+  The enthusiasm, patience, and dedication of my teachers and professors has shaped
+  the course of my life, and I truly hope to continue in their spirit. As a graduate
+  student, I have taught courses across acoustics, robotics, machine learning, and
+  mathematics, earning a Certificate of Distinction in Teaching award four times from
+  the Harvard Derek Bok Center. I have since taught bioacoustics modules at both
+  Cornell University and beyond.
+
+workshop:
+  title: Advanced Bioacoustics Workshop
+  where: IISER Tirupati, India
+  when: February 2–7, 2026
+  term: Winter 2026
+  photo: /images/teaching/iiser-workshop-2026.jpg
+  photo_alt: Workshop participants and instructors gathered around the Advanced Bioacoustics Workshop 2026 banner at IISER Tirupati
+  description: >-
+    A week-long, hands-on workshop for 20 students and working professionals from
+    across India, organized by IISER Tirupati and the K. Lisa Yang Center for
+    Conservation Bioacoustics. I taught modules on unsupervised machine learning and
+    acoustic localization.
+  instructors: >-
+    Co-taught with Rebecca Cohen, Spencer Keyser, and Meghan A. Beatty of the Yang
+    Center, and V.V. Robin, Isha Bopardikar, and Chiti Arvind of IISER Tirupati.
+  materials: https://github.com/skeyser/IISER_YC_AdvancedBioacoustics
+
+courses:
+  - institution: Cornell University
+    items:
+      - when: Fall 2024
+        what: Lecturer, NTRES 3150 Introduction to Conservation Bioacoustics
+        detail: Prepared and taught two lectures and labs on machine learning and statistics.
+      - when: Fall 2023
+        what: Lecturer, NTRES 3150 Introduction to Conservation Bioacoustics
+        detail: Prepared and taught four lectures and two labs on machine learning and acoustic localization.
+      - when: Fall 2022
+        what: Invited Lecturer, NTRES 3150 Introduction to Conservation Bioacoustics
+        detail: Prepared and taught an acoustic localization module.
+      - when: Fall 2023, 2024
+        what: Guest speaker, NTRES 7800 Ornithology Seminar
+        detail: Gave talks about conducting research and pathways in academia.
+  - institution: Harvard University
+    items:
+      - when: Fall 2021
+        what: Teaching Fellow, GENED 1080 Engineering the Acoustical World
+        detail: Led laboratory sessions, developed assignments, held office hours, graded homework.
+      - when: Fall 2020
+        what: Head Teaching Fellow, APMTH 22a Solving and Optimizing
+        detail: Prepared weekly materials, held office hours, graded homework.
+      - when: Spring 2020
+        what: Teaching Fellow, ES 159/259 Introduction to Robotics
+        detail: Led laboratory sessions, developed assignments, held office hours, graded homework.
+      - when: Fall 2019
+        what: Head Teaching Fellow, APMTH 22a Solving and Optimizing
+        detail: Prepared weekly materials, taught section, held office hours, graded homework.
+      - when: Fall 2018
+        what: Teaching Fellow, CS 182 Introduction to Artificial Intelligence
+        detail: Prepared weekly section materials, taught section, held exam review and office hours.
+
+thanks:
+  text: >-
+    A particular thank you to Prof. Jim Morrow. I will always remember his patient
+    explanations after class, his office walls covered in textbooks and cards from
+    dozens of past bike races.
+  name: Jim Morrow (1941–2024)
+  link: https://math.washington.edu/news/2024/05/14/jim-morrow-1941-2024
+  link_label: Remembering Jim Morrow, University of Washington Department of Mathematics
+  photo: https://math.washington.edu/sites/math/files/styles/medium/public/images/image_2.png?itok=OAwfqTBi

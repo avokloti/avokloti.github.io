@@ -1,0 +1,174 @@
+{
+ "art": [
+  {
+   "title": "Bobcat",
+   "slug": "bobcat",
+   "w": 939,
+   "h": 1200
+  },
+  {
+   "title": "Grandfather",
+   "slug": "grandfather",
+   "w": 1337,
+   "h": 2000
+  },
+  {
+   "title": "Hummer",
+   "slug": "hummer",
+   "w": 2000,
+   "h": 1875
+  },
+  {
+   "title": "Humpback",
+   "slug": "humpback",
+   "w": 2000,
+   "h": 1352
+  },
+  {
+   "title": "Kingfisher",
+   "slug": "kingfisher",
+   "w": 1528,
+   "h": 2000
+  },
+  {
+   "title": "Nanga",
+   "slug": "nanga",
+   "w": 2000,
+   "h": 1534
+  },
+  {
+   "title": "Panda",
+   "slug": "panda",
+   "w": 1217,
+   "h": 1600
+  },
+  {
+   "title": "Plover",
+   "slug": "plover",
+   "w": 2000,
+   "h": 1500
+  },
+  {
+   "title": "Rhino",
+   "slug": "rhino",
+   "w": 703,
+   "h": 527
+  },
+  {
+   "title": "Royalty",
+   "slug": "royalty",
+   "w": 2000,
+   "h": 1503
+  },
+  {
+   "title": "Side By Side",
+   "slug": "side-by-side",
+   "w": 2000,
+   "h": 1547
+  },
+  {
+   "title": "Tigris",
+   "slug": "tigris",
+   "w": 1693,
+   "h": 2000
+  },
+  {
+   "title": "Travelers",
+   "slug": "travelers",
+   "w": 1522,
+   "h": 2000
+  }
+ ],
+ "photos": [
+  {
+   "title": "Boston Lights",
+   "slug": "boston-lights",
+   "w": 2000,
+   "h": 1125
+  },
+  {
+   "title": "Busy Pollinator",
+   "slug": "busy-pollinator",
+   "w": 2000,
+   "h": 2000
+  },
+  {
+   "title": "City Lights",
+   "slug": "city-lights",
+   "w": 2000,
+   "h": 1500
+  },
+  {
+   "title": "Crane Beach",
+   "slug": "crane-beach",
+   "w": 2000,
+   "h": 594
+  },
+  {
+   "title": "Dawn Chorus",
+   "slug": "dawn-chorus",
+   "w": 2000,
+   "h": 1500
+  },
+  {
+   "title": "Hyak",
+   "slug": "hyak",
+   "w": 2000,
+   "h": 1500
+  },
+  {
+   "title": "In Bloom",
+   "slug": "in-bloom",
+   "w": 1254,
+   "h": 1254
+  },
+  {
+   "title": "Joshua Tree National Park",
+   "slug": "joshua-tree-national-park",
+   "w": 2000,
+   "h": 1333
+  },
+  {
+   "title": "La Jolla",
+   "slug": "la-jolla",
+   "w": 2000,
+   "h": 1125
+  },
+  {
+   "title": "Montlake",
+   "slug": "montlake",
+   "w": 2000,
+   "h": 1125
+  },
+  {
+   "title": "Newport Coast",
+   "slug": "newport-coast",
+   "w": 2000,
+   "h": 1331
+  },
+  {
+   "title": "Piglets Corner",
+   "slug": "piglets-corner",
+   "w": 2000,
+   "h": 1500
+  },
+  {
+   "title": "Signs of Spring",
+   "slug": "signs-of-spring",
+   "w": 2000,
+   "h": 1500
+  },
+  {
+   "title": "Widener Library",
+   "slug": "widener-library",
+   "w": 2000,
+   "h": 1500
+  },
+  {
+   "title": "Worlds End",
+   "slug": "worlds-end",
+   "w": 2000,
+   "h": 1500
+  }
+ ]
+}
