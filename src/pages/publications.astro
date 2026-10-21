@@ -1,0 +1,47 @@
+---
+import Base from '../layouts/Base.astro';
+import site from '../data/site.json';
+import { publications, authorsHtml } from '../lib/data';
+
+const groups = [
+  { title: 'Journal articles', types: ['journal'] },
+  { title: 'Conference and workshop papers', types: ['conference'] },
+  { title: 'Dissertation and reports', types: ['thesis', 'report'] },
+  { title: 'In review and in preparation', types: ['review', 'preparation'] },
+].map((g) => ({ ...g, items: publications.filter((p) => g.types.includes(p.type)) }));
+const status = { review: 'In review', preparation: 'In preparation' } as Record<string, string>;
+const scholar = site.links.find((l) => l.label === 'Google Scholar')?.href;
+---
+<Base title="Publications" banner="/images/banners/cape_cod_seashore.jpg" caption="Cape Cod National Seashore, Massachusetts, 2022">
+  <div class="prose">
+    <h1>Publications</h1>
+    <p>An asterisk (*) marks shared first authorship. Please see <a href={scholar}>Google Scholar</a> for a complete up-to-date list.</p>
+  </div>
+
+  {groups.map((g) => (
+    <section class="pubs">
+      <h2>{g.title}</h2>
+      <ol class="pub-list">
+        {g.items.map((p, i) => {
+          const showYear = p.year && p.year !== g.items[i - 1]?.year;
+          return (
+            <li class="pub">
+              <span class="pub__year">{showYear ? p.year : status[p.type] && i === g.items.findIndex((q) => q.type === p.type) ? status[p.type] : ''}</span>
+              <div class="pub__body">
+                <p class="pub__title">{p.title}</p>
+                <p class="pub__authors">
+                  <Fragment set:html={authorsHtml(p.authors)} />
+                  {p.author_count && <span class="muted"> ({p.author_count} authors)</span>}
+                </p>
+                {p.venue && <p class="pub__venue">{p.venue}</p>}
+                {p.links && (
+                  <p class="pub__links">{p.links.map((l) => <a href={l.url}>{l.label}</a>)}</p>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  ))}
+</Base>

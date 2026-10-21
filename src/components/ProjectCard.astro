@@ -1,0 +1,11 @@
+---
+const { project } = Astro.props;
+const { title, image, year } = project.data;
+---
+<li>
+  <a class="card" href={`/research/${project.id}/`} data-project={project.id}>
+    <div class="card__fig"><img src={image} alt="" loading="lazy" /></div>
+    <span class="card__title">{title}</span>
+    <span class="card__year">{year}</span>
+  </a>
+</li>

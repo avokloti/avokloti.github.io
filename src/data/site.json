@@ -1,0 +1,50 @@
+{
+  "name": "Irina Tolkova",
+  "tagline": "Applied mathematics, computer science, and wildlife conservation",
+  "role": "Postdoctoral Fellow",
+  "affiliation": "Cornell K. Lisa Yang Center for Conservation Bioacoustics, Cornell University",
+  "email": "itolkova@cornell.edu",
+  "links": [
+    {
+      "label": "Google Scholar",
+      "icon": "scholar",
+      "href": "https://scholar.google.com/citations?user=ty5AhbgAAAAJ"
+    },
+    {
+      "label": "GitHub",
+      "icon": "github",
+      "href": "https://github.com/avokloti"
+    }
+  ],
+  "nav": [
+    {
+      "label": "CV",
+      "href": "/cv/"
+    },
+    {
+      "label": "Research",
+      "href": "/research/"
+    },
+    {
+      "label": "Teaching",
+      "href": "/teaching/"
+    },
+    {
+      "label": "Mentorship",
+      "href": "/mentorship/"
+    },
+    {
+      "label": "Publications",
+      "href": "/publications/"
+    },
+    {
+      "label": "Art",
+      "href": "/art/"
+    }
+  ],
+  "instagram": "https://instagram.com/avoklot",
+  "palette": "spruce",
+  "analytics": {
+    "goatcounter": "https://avoklot.goatcounter.com/count"
+  }
+}

@@ -1,0 +1,21 @@
+# Web summary of the CV: appointments and education only. Everything else is in the
+# full PDF (public/files/cv.pdf) and on the site's other pages.
+updated: March 2026
+
+sections:
+  - title: Appointments
+    items:
+      - when: 2023–present
+        what: Postdoctoral Fellow
+        where: Cornell K. Lisa Yang Center for Conservation Bioacoustics, Cornell University
+        detail: Edward W. Rose Postdoctoral Fellowship; advised by Holger Klinck
+
+  - title: Education
+    items:
+      - when: 2017–2023
+        what: PhD and MS in Applied Mathematics
+        where: Harvard University
+        detail: Advised by L. Mahadevan
+      - when: 2012–2017
+        what: BS in Computer Science with Honors; BS in Applied and Computational Mathematical Sciences
+        where: University of Washington

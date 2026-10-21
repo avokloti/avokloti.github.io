@@ -1,0 +1,22 @@
+---
+import type { NewsItem } from '../lib/data';
+const { items } = Astro.props as { items: NewsItem[] };
+---
+{items.length > 0 && (
+  <ul class="news-list">
+    {items.map((n) => (
+      <li>
+        <a href={n.url}>
+          <span class="news__thumb" aria-hidden="true">
+            {n.fallback && <img src={n.fallback} alt="" loading="lazy" />}
+            {n.image && <img src={n.image} alt="" loading="lazy" data-remote referrerpolicy="no-referrer" />}
+          </span>
+          <span class="news__text">
+            <span class="news__title">{n.title}</span>
+            <span class="news__meta">{n.outlet}, {n.date}</span>
+          </span>
+        </a>
+      </li>
+    ))}
+  </ul>
+)}

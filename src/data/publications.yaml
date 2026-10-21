@@ -1,0 +1,184 @@
+# Publications, newest first within each type. Source: CV (March 2026).
+# type: journal | conference | thesis | report | review | preparation
+# Mark equal contribution with * after a name. Your name is bolded automatically.
+# links: any number of {label, url} pairs.
+
+- id: tolkova-2026-narw-embeddings
+  type: journal
+  year: 2026
+  authors: Tolkova I, Klinck H, Cusano DA, Kügler A, Parks SE
+  title: "Detection, communication, and individual identification with deep audio embeddings: A case study with North Atlantic right whales"
+  venue: PLOS Computational Biology, 22(6), e1013321
+  links:
+    - { label: DOI, url: "https://doi.org/10.1371/journal.pcbi.1013321" }
+    - { label: Preprint, url: "https://doi.org/10.1101/2025.07.11.664307" }
+
+- id: breviglieri-2026-antbirds
+  type: journal
+  year: 2026
+  authors: Breviglieri EL, Sugai LSM, Sementili-Cardoso G, Donatelli RJ, Tolkova I
+  title: Traditional bioacoustic analyses and machine-learning methods indicate weak vocal dimorphism in four Cerrado antbird species
+  venue: Journal of Ornithology
+  links:
+    - { label: DOI, url: "https://doi.org/10.1007/s10336-026-02415-3" }
+
+- id: garcia-2025-narw-abundance
+  type: journal
+  year: 2025
+  authors: Garcia ML*, Tolkova I*, Madhusudhana S, Rahaman A, Baker SC, Mayo CA, Hudak CA, Klinck H
+  title: Acoustic abundance estimation for critically endangered North Atlantic right whales in Cape Cod Bay, Massachusetts, USA
+  venue: Endangered Species Research, 56, 101–115
+  links:
+    - { label: DOI, url: "https://doi.org/10.3354/esr01384" }
+
+- id: marantan-2023-contour
+  type: journal
+  year: 2023
+  authors: Marantan A*, Tolkova I*, Mahadevan L
+  title: Image cognition using contour curvature statistics
+  venue: Proceedings of the Royal Society A, 479(2274), 20220662
+  links:
+    - { label: PDF, url: "https://softmath.seas.harvard.edu/wp-content/uploads/2023/09/2023-10.pdf" }
+
+- id: swaminathan-2022-gait
+  type: journal
+  year: 2022
+  authors: Swaminathan K*, Tolkova I*, Baker L, Revi DA, Awad L, Walsh C, Mahadevan L
+  title: A continuous statistical-geometric framework for normative and impaired gaits
+  venue: Journal of the Royal Society Interface
+  links:
+    - { label: DOI, url: "https://doi.org/10.1098/rsif.2022.0402" }
+
+- id: tolkova-2022-avs
+  type: journal
+  year: 2022
+  authors: Tolkova I, Klinck H
+  title: Source separation with an acoustic vector sensor for terrestrial bioacoustics
+  venue: The Journal of the Acoustical Society of America, 152(2), 1123–1134
+  links:
+    - { label: DOI, url: "https://doi.org/10.1121/10.0013505" }
+
+- id: cram-2022-cooperation
+  type: journal
+  year: 2022
+  authors: Cram DL, van der Wal J, Uomini N, …, Tolkova I, …, Spottiswoode CN
+  author_count: 42
+  title: The ecology and evolution of human-wildlife cooperation
+  venue: People and Nature
+  links:
+    - { label: DOI, url: "https://doi.org/10.1002/pan3.10369" }
+
+- id: vanderwal-2022-safeguarding
+  type: journal
+  year: 2022
+  authors: van der Wal J, Spottiswoode C, Uomini N, …, Tolkova I, …, Cram DL
+  author_count: 43
+  title: Safeguarding human–wildlife cooperation
+  venue: Conservation Letters
+  links:
+    - { label: DOI, url: "https://doi.org/10.1111/conl.12886" }
+
+- id: chandra-2021-parkinsons
+  type: journal
+  year: 2021
+  authors: Chandra J*, Muthupalaniappan S*, Shang Z*, Deng R*, Lin R, Tolkova I, Butts D, Sul D, Marzouk S, Bose S, Chen A
+  title: Screening of Parkinson’s disease using geometric features extracted from spiral drawings
+  venue: Brain Sciences
+  links:
+    - { label: Article, url: "https://www.mdpi.com/2076-3425/11/10/1297" }
+
+- id: ciannelli-2019-cod
+  type: journal
+  year: 2019
+  authors: Ciannelli L, Tolkova I, Lauth R, Puerta P, Helser T, Gitelman A, Thompson G
+  title: Spatial, interannual, and generational sources of trait variability in a marine population
+  venue: Ecology
+  links:
+    - { label: DOI, url: "https://doi.org/10.1002/ecy.2907" }
+
+- id: torres-2017-movement
+  type: journal
+  year: 2017
+  authors: Torres LG, Orben RA, Tolkova I, Thompson DR
+  title: Classification of animal movement behavior through residence in space and time
+  venue: PLOS ONE
+  links:
+    - { label: DOI, url: "https://doi.org/10.1371/journal.pone.0168513" }
+
+- id: mohapatra-2026-agentic
+  type: conference
+  year: 2026
+  authors: Mohapatra P, Tolkova I, Sarkar A, Sehgal A, Salisbury DP, Von Duyke AL, Bouffaut L, Klinck H, Sun JJ
+  title: Agentic discovery of multi-channel bioacoustic association algorithms
+  venue: Foundation Models for Science Workshop, ICLR 2026
+  links:
+    - { label: Workshop page, url: "https://iclr.cc/virtual/2026/10014516" }
+
+- id: dhar-2025-poaching
+  type: conference
+  year: 2025
+  authors: Dhar N, Tolkova I
+  title: Fighting poaching through targeted deep learning and sensor integration
+  venue: NeurIPS 2025 Workshop on AI for Non-Human Animal Communication
+  links:
+    - { label: Workshop page, url: "https://neurips.cc/virtual/2025/131517" }
+
+- id: tolkova-2021-birdsong
+  type: conference
+  year: 2021
+  authors: Tolkova I*, Chu B*, Hedman M*, Kahl S, Klinck H
+  title: Parsing birdsong with deep audio embeddings
+  venue: AI for Social Good Workshop, IJCAI 2021
+  links:
+    - { label: arXiv, url: "https://arxiv.org/abs/2108.09203" }
+
+- id: tolkova-2021-features
+  type: conference
+  year: 2021
+  authors: Tolkova I
+  title: "Feature representations for conservation bioacoustics: Review and discussion"
+  venue: AI for Social Good Workshop, IJCAI 2021
+  links:
+    - { label: PDF, url: "https://crcs.seas.harvard.edu/files/crcs/files/ai4sg-21_paper_43.pdf" }
+
+- id: tolkova-2023-dissertation
+  type: thesis
+  year: 2023
+  authors: Tolkova I
+  title: Acoustic source separation, contour classification, and trajectory optimization
+  venue: Doctoral dissertation, Harvard University
+
+- id: klinck-2024-guam-report
+  type: report
+  year: 2024
+  authors: Klinck H, Yack T, Tolkova I, Salisbury DP, Harris D
+  title: "Passive acoustic monitoring in the Mariana Islands: Density estimation of beaked whales along the west coast of Guam"
+  venue: Final report prepared for Commander, U.S. Pacific Fleet
+  short_venue: Technical report for the U.S. Navy Marine Species Monitoring Program
+  links:
+    - { label: PDF, url: "https://navymarinespeciesmonitoring.us/application/files/6317/6485/5074/Klinck_et_al_2024_PAM_in_MITT.pdf" }
+
+- id: smith-review-humpback
+  type: review
+  authors: Smith MA, Cusano DA, Hood D, Robbins J, Tolkova I, Weinrich MT, Wiley DN, Parks SE
+  title: Integrating standard identity metrics and machine learning methods to assess acoustic identity encoding in humpback whales (Megaptera novaeangliae)
+
+- id: tolkova-prep-cockatiel
+  type: preparation
+  authors: Tolkova I, Klinck H
+  title: "The cockatiel party problem: Source separation in a dawn chorus"
+
+- id: bouffaut-prep-bowhead
+  type: preparation
+  authors: Bouffaut L, Tolkova I, Pepper BE, Salisbury D, Rahaman A, Ponirakis D, Furtado HSC, Eagen S, Von Duyke AL, Givens GH, Citta JJ, Klinck H
+  title: Acoustic analysis of the 2025 abundance survey of the Bering-Chukchi-Beaufort bowhead whale population near Point Barrow, Alaska
+
+- id: tolkova-prep-guam-diel
+  type: preparation
+  authors: Tolkova I, Harris D, Yack T, Salisbury DP, Klinck H
+  title: Diel niche partitioning in passive acoustic monitoring of beaked whales offshore Guam
+
+- id: akashram-prep-birdnet
+  type: preparation
+  authors: Akashram, Tolkova I
+  title: "What do BirdNET embeddings capture: The singer, the song, or the setting?"

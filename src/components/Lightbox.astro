@@ -1,0 +1,52 @@
+---
+// Full-screen image viewer. Any link with data-lightbox opens here; links inside
+// the same [data-gallery] container can be stepped through with the arrows.
+// data-title sets the caption; data-fullsize adds an "Open full size" link.
+---
+<dialog class="lightbox" id="lightbox" aria-label="Image viewer">
+  <figure>
+    <img alt="" />
+    <figcaption>
+      <span class="lb-title"></span> <span class="lb-count"></span>
+      <a class="lb-full" target="_blank" rel="noopener" hidden>Open full size</a>
+    </figcaption>
+  </figure>
+  <button class="lb-btn lb-prev" type="button" aria-label="Previous image">‹</button>
+  <button class="lb-btn lb-next" type="button" aria-label="Next image">›</button>
+  <button class="lb-btn lb-close" type="button" aria-label="Close">×</button>
+</dialog>
+
+<script is:inline>
+(() => {
+  const box = document.getElementById('lightbox');
+  const img = box.querySelector('img');
+  const full = box.querySelector('.lb-full');
+  let list = [], i = 0;
+  const show = () => {
+    const a = list[i];
+    img.src = a.getAttribute('href'); img.alt = a.dataset.title || '';
+    box.querySelector('.lb-title').textContent = a.dataset.title || '';
+    box.querySelector('.lb-count').textContent = list.length > 1 ? `${i + 1} of ${list.length}` : '';
+    if (a.hasAttribute('data-fullsize')) { full.href = a.getAttribute('href'); full.hidden = false; } else full.hidden = true;
+    box.querySelectorAll('.lb-prev, .lb-next').forEach((b) => (b.hidden = list.length < 2));
+  };
+  const step = (d) => { i = (i + d + list.length) % list.length; show(); };
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[data-lightbox]');
+    if (!a || e.metaKey || e.ctrlKey) return;
+    e.preventDefault();
+    const group = a.closest('[data-gallery]');
+    list = group ? [...group.querySelectorAll('a[data-lightbox]')] : [a];
+    i = list.indexOf(a); show(); box.showModal();
+  });
+  box.querySelector('.lb-prev').onclick = () => step(-1);
+  box.querySelector('.lb-next').onclick = () => step(1);
+  box.querySelector('.lb-close').onclick = () => box.close();
+  box.addEventListener('click', (e) => { if (e.target === box || e.target.tagName === 'FIGURE') box.close(); });
+  box.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') step(-1);
+    if (e.key === 'ArrowRight') step(1);
+  });
+  box.addEventListener('close', () => img.removeAttribute('src'));
+})();
+</script>

@@ -1,0 +1,29 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import themes from '../../data/research-themes.json';
+import NewsList from '../../components/NewsList.astro';
+import { newsFor, articleSections } from '../../lib/data';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  return projects.map((project) => ({ params: { id: project.id }, props: { project } }));
+}
+const { project } = Astro.props;
+const { Content } = await render(project);
+const theme = themes.find((t) => t.id === project.data.theme)!;
+---
+<Base title={project.data.title} description={project.data.excerpt}>
+  <p class="crumb"><a href={`/research/#${theme.id}`}>{theme.title}</a></p>
+  <header class="project-head">
+    <h1>{project.data.title}</h1>
+    {project.data.excerpt && <p>{project.data.excerpt}</p>}
+  </header>
+  <article class="prose"><Content /></article>
+  {articleSections(project.data.articles, project.data.image).map((sec) => (
+    <section class="prose pd__news"><h3>{sec.heading}</h3><NewsList items={sec.items} /></section>
+  ))}
+  {newsFor(project.id).length > 0 && (
+    <section class="prose pd__news"><h3>In the news</h3><NewsList items={newsFor(project.id)} /></section>
+  )}
+</Base>

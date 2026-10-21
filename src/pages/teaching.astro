@@ -1,0 +1,67 @@
+---
+import Base from '../layouts/Base.astro';
+import { teaching } from '../lib/data';
+import { icons } from '../lib/icons';
+import Lightbox from '../components/Lightbox.astro';
+const { workshop: w, courses, thanks } = teaching;
+---
+<Base title="Teaching" banner="/images/banners/widener_library.jpg" caption="Widener Library, Harvard University">
+  <div class="prose">
+    <h1>Teaching</h1>
+    <p class="lede-sm">{teaching.intro}</p>
+  </div>
+
+  <section class="cv-section">
+    <h2>Courses and lectures</h2>
+
+    <h3 class="course-inst">{w.where}</h3>
+    <ol class="cv-list">
+      <li class="workshop" id="workshop">
+        <span class="cv-when">{w.term}</span>
+        <div class="cv-what workshop__body">
+          <div class="workshop__text">
+            <p class="cv-title">Instructor, {w.title}</p>
+            <p class="cv-detail">{w.description}</p>
+            <p class="cv-detail muted">{w.instructors}</p>
+            <a class="materials" href={w.materials}>
+              <Fragment set:html={icons.github} />
+              <span>Workshop materials</span>
+            </a>
+          </div>
+          <a class="workshop__photo" href={w.photo} data-lightbox data-title={`${w.title}, ${w.where}, ${w.when}`}>
+            <img src={w.photo} width="1280" height="529" alt={w.photo_alt} loading="lazy" />
+          </a>
+        </div>
+      </li>
+    </ol>
+
+    {courses.map((c) => (
+      <>
+        <h3 class="course-inst">{c.institution}</h3>
+        <ol class="cv-list">
+          {c.items.map((it) => (
+            <li>
+              <span class="cv-when">{it.when}</span>
+              <div class="cv-what">
+                <p class="cv-title">{it.what}</p>
+                {it.detail && <p class="cv-detail">{it.detail}</p>}
+              </div>
+            </li>
+          ))}
+        </ol>
+      </>
+    ))}
+  </section>
+
+  <aside class="thanks" aria-label="Thank you">
+    <div class="thanks__photo">
+      <img src={thanks.photo} alt={thanks.name} loading="lazy" data-remote referrerpolicy="no-referrer" />
+    </div>
+    <div class="thanks__text">
+      <p>{thanks.text}</p>
+      <p class="thanks__link"><a href={thanks.link}>{thanks.link_label}</a></p>
+    </div>
+  </aside>
+
+  <Lightbox />
+</Base>

@@ -1,0 +1,67 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import ProjectDialog from '../../components/ProjectDialog.astro';
+import SpeciesGroup from '../../components/SpeciesGroup.astro';
+import themes from '../../data/research-themes.json';
+import { icons } from '../../lib/icons';
+
+const projects = await getCollection('projects');
+const byTheme = (id: string) =>
+  projects
+    .filter((p) => p.data.theme === id)
+    .sort((a, b) => b.data.year - a.data.year || b.id.localeCompare(a.id));
+const current = themes.filter((t) => !t.earlier);
+const earlier = themes.filter((t) => t.earlier);
+---
+<Base title="Research" banner="/images/banners/yosemite.jpg" caption="Yosemite, California, 2026">
+  <div class="prose">
+    <h1>Research</h1>
+    <p>My work integrates principles of physical acoustics, mathematical optimization, and machine learning for studying vocal wildlife across both marine and terrestrial environments. I aim for meaningful conservation impact, and am keen to work with non-profits and local communities.</p>
+  </div>
+  <nav class="jump" aria-label="Research themes">
+    <ul>
+      {current.map((t) => (
+        <li><a href={`#${t.id}`} aria-label={t.title} data-tip={t.title}><Fragment set:html={icons[t.icon]} /></a></li>
+      ))}
+    </ul>
+    <ul class="jump__earlier" aria-label="Earlier work">
+      {earlier.map((t) => (
+        <li><a href={`#${t.id}`} aria-label={`${t.title} (earlier work)`} data-tip={t.title}><Fragment set:html={icons[t.icon]} /></a></li>
+      ))}
+    </ul>
+  </nav>
+
+  {current.map((t) => (
+    <section class="theme" id={t.id}>
+      <div class="theme__head"><h2>{t.title}</h2><p>{t.blurb}</p></div>
+      {t.groups
+        ? <div class="species-list">{t.groups.map((g) => <SpeciesGroup group={g} projects={projects} />)}</div>
+        : <ul class="project-grid">{byTheme(t.id).map((p) => <ProjectCard project={p} />)}</ul>}
+    </section>
+  ))}
+
+  <details class="earlier" id="earlier">
+    <summary>Earlier Work <span>Quantitative ecology and other projects</span></summary>
+    {earlier.map((t) => (
+      <section class="theme" id={t.id}>
+        <div class="theme__head"><h3>{t.title}</h3><p>{t.blurb}</p></div>
+        <ul class="project-grid">{byTheme(t.id).map((p) => <ProjectCard project={p} />)}</ul>
+      </section>
+    ))}
+  </details>
+
+  <ProjectDialog projects={projects} themes={themes} />
+
+  <script is:inline>
+    // Opening a link to an earlier-work theme expands that section.
+    function openFromHash() {
+      const el = location.hash && document.getElementById(location.hash.slice(1));
+      const box = el && el.closest('details');
+      if (box) { box.open = true; el.scrollIntoView(); }
+    }
+    addEventListener('hashchange', openFromHash);
+    openFromHash();
+  </script>
+</Base>

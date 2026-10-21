@@ -1,0 +1,34 @@
+---
+// Shows the email address without putting it in the page's code, so most
+// spam harvesters (which read raw HTML) can't collect it. The address is stored
+// scrambled and assembled in the visitor's browser.
+//   <Email />               a clickable address, e.g. inside a sentence
+//   <Email icon />          the round envelope icon used on the home page
+import site from '../data/site.json';
+import { icons } from '../lib/icons';
+const { icon = false } = Astro.props;
+const [user, domain] = site.email.split('@');
+// Reversed and base64-encoded, so the address never appears as plain text.
+const scramble = (s: string) => Buffer.from([...s].reverse().join('')).toString('base64');
+const fallback = `${user} [at] ${domain.replace(/\./g, ' [dot] ')}`;
+---
+{icon ? (
+  <a class="js-email" href="#" data-u={scramble(user)} data-d={scramble(domain)} aria-label="Email" title={fallback}>
+    <Fragment set:html={icons.envelope} />
+  </a>
+) : (
+  <a class="js-email js-email--text" href="#" data-u={scramble(user)} data-d={scramble(domain)}>{fallback}</a>
+)}
+<script is:inline>
+  (() => {
+    const unscramble = (s) => [...atob(s)].reverse().join('');
+    document.querySelectorAll('a.js-email:not([data-ready])').forEach((a) => {
+      const addr = `${unscramble(a.dataset.u)}@${unscramble(a.dataset.d)}`;
+      a.href = `mailto:${addr}`;
+      a.title = addr;
+      if (a.classList.contains('js-email--text')) a.textContent = addr;
+      else a.setAttribute('aria-label', `Email ${addr}`);
+      a.dataset.ready = '';
+    });
+  })();
+</script>

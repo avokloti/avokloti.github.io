@@ -1,2 +1,9 @@
-_site/
+# Installed packages and build output (recreated by npm install / npm run build)
+node_modules/
+dist/
+preview/
+.astro/
 
+# System files
+.DS_Store
+._*

@@ -1,0 +1,98 @@
+---
+import '../styles/site.css';
+import site from '../data/site.json';
+import bannerColors from '../data/banner-colors.json';
+import { icons } from '../lib/icons';
+
+interface Props {
+  title?: string;
+  description?: string;
+  banner?: string;
+  caption?: string;
+  /** Which part of the banner photo stays in view when it's cropped, e.g. "center 70%". */
+  bannerPos?: string;
+}
+const { title, description = site.tagline, banner, caption, bannerPos } = Astro.props;
+// Soft background gradient sampled from this page's banner photo.
+const tint = banner ? (bannerColors as Record<string, { light: string[]; dark: string[] }>)[banner] : undefined;
+const tintStyle = tint
+  ? `--g1-light:${tint.light[0]};--g2-light:${tint.light[1]};--g1-dark:${tint.dark[0]};--g2-dark:${tint.dark[1]}`
+  : undefined;
+// Visit counting (GoatCounter: no cookies, no personal data). Loads only in the
+// published build, so local previews and `npm run dev` don't count as visits.
+const countVisits = import.meta.env.PROD && process.env.PREVIEW !== '1' && site.analytics?.goatcounter;
+const pageTitle = title ? `${title} · ${site.name}` : site.name;
+const here = Astro.url.pathname.replace(/\.html$/, '').replace(/\/$/, '') || '/';
+const isCurrent = (href: string) => {
+  const h = href.replace(/\/$/, '') || '/';
+  return h === '/' ? here === '/' || here === '/index' : here.startsWith(h);
+};
+---
+<!doctype html>
+<html lang="en" data-palette={site.palette}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="claude:viewport-fit-sides" content="cover" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    {banner && <meta property="og:image" content={new URL(banner, Astro.site)} />}
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Public+Sans:wght@400;500;600&display=swap"
+    />
+    {countVisits && (
+      <script is:inline data-goatcounter={site.analytics.goatcounter} async src="https://gc.zgo.at/count.js"></script>
+    )}
+  </head>
+  <body>
+    <header class="masthead">
+      <div class="masthead__inner">
+        <a class="wordmark" href="/" aria-current={here === '/' || here === '/index' ? 'page' : undefined}><span class="wordmark__home" aria-hidden="true"><Fragment set:html={icons.house} /></span>{site.name}</a>
+        <nav aria-label="Main">
+          <ul>
+            {site.nav.map((item) => (
+              <li>
+                <a
+                  href={item.href}
+                  aria-current={!item.external && isCurrent(item.href) ? 'page' : undefined}
+                  {...(item.external ? { target: '_blank', rel: 'noopener' } : {})}
+                >{item.label}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <div class:list={['tint', { 'tint--on': tint }]} style={tintStyle}>
+      {banner && (
+        <figure class="banner">
+          <img src={banner} alt="" style={bannerPos ? `object-position: ${bannerPos}` : undefined} />
+          {caption && <figcaption>{caption}</figcaption>}
+        </figure>
+      )}
+      <div class="frame">
+        <slot />
+      </div>
+    </div>
+
+    <script is:inline>
+      // A preview image hosted elsewhere that fails to load reveals the local image behind it.
+      document.querySelectorAll('img[data-remote]').forEach((img) => {
+        const drop = () => img.remove();
+        if (img.complete && !img.naturalWidth) drop(); else img.addEventListener('error', drop);
+      });
+    </script>
+
+    <footer class="footer">
+      <div class="footer__inner">
+        <span>© {new Date().getFullYear()} {site.name}</span>
+      </div>
+    </footer>
+  </body>
+</html>
