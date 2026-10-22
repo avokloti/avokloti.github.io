@@ -4,6 +4,7 @@ excerpt: "Class project for AM 221: Advanced Optimization, spring semester of 20
 image: "/images/robobee_figure.jpg"
 theme: "robotics"
 year: 2019
+summary: "Optimizing landing trajectories for the Harvard RoboBee, an insect-scale flying robot. A class project for Advanced Optimization, with Rebecca Steinmeyer."
 ---
 *This is a final project for the course AM 221: "Advanced Optimization" taught by Prof. Yaron Singer in the spring semester of 2019, done with Rebecca Steinmeyer (now Rebecca McGill) .*
 

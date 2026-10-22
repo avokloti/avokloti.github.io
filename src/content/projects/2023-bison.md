@@ -1,8 +1,9 @@
 ---
-title: "Acoustic Monitoring of a Bison Reintroduction on the Blackfeet Reservation"
+title: "Bison on the Blackfeet Reservation"
 image: "/images/swift.jpg"
 theme: "terrestrial"
 year: 2023
+summary: "In 2023, the Blackfeet Nation re-introduced wild bison to the Chief Mountain region. At the invitation of a colleague at IndigenousLed, I visited the Blackfeet Reservation to deploy SwiftOne units with the aim of documenting local biodiversity and understanding ecosystem change."
 ---
 
 ![](/images/swift.jpg)

@@ -1,40 +1,53 @@
 ---
-// One species within a research theme: a sketch, the projects (which open in
-// the project pop-up), and optionally linked journal articles.
+// A group of projects on the Research page: a key image, then each project's
+// title, year, short summary, and any linked articles, reports, or news.
+// Clicking a title (or "Read more") opens the full write-up in the pop-up.
+// With `plain`, the key image and group heading are left out (used under Earlier Work).
 import NewsList from './NewsList.astro';
-import { publications } from '../lib/data';
-const { group, projects } = Astro.props;
+import ToolList from './ToolList.astro';
+import { articleSections, newsFor, toolsFor } from '../lib/data';
+const { group, projects, plain = false } = Astro.props;
 const items = group.projects.map((id: string) => projects.find((p: any) => p.id === id)).filter(Boolean);
-const articles = (group.articles ?? []).map((a: { pub: string; thumb: string; outlet?: string }) => {
-  const pub = publications.find((p) => p.id === a.pub)!;
-  return {
-    outlet: a.outlet ?? (pub.venue ?? '').split(',')[0],
-    title: pub.title,
-    date: String(pub.year),
-    url: pub.links?.[0]?.url ?? '#',
-    fallback: a.thumb,
-  };
-});
+const linksFor = (p: any) => [
+  ...articleSections(p.data.articles, p.data.image),
+  ...(newsFor(p.id).length > 0 ? [{ heading: 'In the news', items: newsFor(p.id) }] : []),
+];
 ---
-<article class="species" id={group.id}>
-  <div class:list={["species__sketch", { "species__sketch--photo": group.photo, "species__sketch--figure": group.figure }]}><img src={group.sketch} alt={group.sketch_alt} title={group.sketch_alt} loading="lazy" /></div>
+<article class:list={['species', { 'species--plain': plain }]} id={plain ? undefined : group.id}>
+  {!plain && (
+    <div class:list={['species__sketch', { 'species__sketch--photo': group.photo, 'species__sketch--figure': group.figure }]}>
+      <img src={group.sketch} alt={group.sketch_alt} title={group.sketch_alt} loading="lazy" />
+    </div>
+  )}
   <div class="species__body">
-    <h3>{group.title} {group.since && <span class="species__years">{group.since}–present</span>}</h3>
+    {!plain && group.title && <h3>{group.title} {group.since && <span class="species__years">{group.since}–present</span>}</h3>}
     <ul class="species__projects">
       {items.map((p: any) => (
-        <li>
-          <a href={`/research/${p.id}/`} data-project={p.id}>
+        <li class="proj">
+          <a class="proj__head" href={`/research/${p.id}/`} data-project={p.id}>
             <span class="species__ptitle">{p.data.title}</span>
             <span class="species__pyear">{p.data.year}</span>
           </a>
+          {p.data.summary && (
+            <p class="proj__summary">
+              {p.data.summary}{' '}
+              <a class="proj__more" href={`/research/${p.id}/`} data-project={p.id} aria-label={`Read more about ${p.data.title}`}>Read more</a>
+            </p>
+          )}
+          {linksFor(p).map((sec) => (
+            <div class="proj__links">
+              <h4>{sec.heading}</h4>
+              <NewsList items={sec.items} />
+            </div>
+          ))}
+          {toolsFor(p.id).length > 0 && (
+            <div class="proj__links">
+              <h4>Interactive tools</h4>
+              <ToolList items={toolsFor(p.id)} />
+            </div>
+          )}
         </li>
       ))}
     </ul>
-    {articles.length > 0 && (
-      <div class="species__articles">
-        <h4>{group.articles_label ?? 'Articles'}</h4>
-        <NewsList items={articles} />
-      </div>
-    )}
   </div>
 </article>

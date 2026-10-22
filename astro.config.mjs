@@ -12,9 +12,10 @@ const oldUrls = {
   '/portfolio': '/research',
   '/artwork': '/art',
   '/about': '/',
-  '/resume': '/cv',
+  '/cv': '/files/cv.pdf',
+  '/resume': '/files/cv.pdf',
   '/publication': '/publications',
-  '/talks': '/cv',
+  '/talks': '/files/cv.pdf',
 };
 // Each old project page goes to its new one.
 for (const f of readdirSync('./src/content/projects')) {
@@ -27,8 +28,8 @@ for (const id of ['2017-06-09-tolkova', '2017-1-3', '2019-10-06-ciannelli', '202
   oldUrls[`/publication/${id}`] = '/publications';
   oldUrls[`/publications/${id}`] = '/publications';
 }
-// Old talk pages go to the CV (which links the full list), and old course pages to Teaching.
-for (const id of ['2015-09-01', '2017-06-01']) oldUrls[`/talks/${id}`] = '/cv';
+// Old talk pages go to the CV PDF (which lists all talks), and old course pages to Teaching.
+for (const id of ['2015-09-01', '2017-06-01']) oldUrls[`/talks/${id}`] = '/files/cv.pdf';
 for (const id of ['2018-cs182', '2019-am22a', '2020-am22a', '2020-es159']) oldUrls[`/teaching/${id}`] = '/teaching';
 
 export default defineConfig({

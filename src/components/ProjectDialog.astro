@@ -2,7 +2,8 @@
 // One shared pop-up for project write-ups. Each project's content sits in a
 // <template>, so its figures load only when that project is opened.
 import NewsList from './NewsList.astro';
-import { newsFor, articleSections } from '../lib/data';
+import ToolList from './ToolList.astro';
+import { newsFor, articleSections, toolsFor } from '../lib/data';
 const { projects, themes } = Astro.props;
 const themeTitle = (id: string) => themes.find((t: any) => t.id === id)?.title ?? '';
 const bodyHtml = (p: any) => {
@@ -24,6 +25,9 @@ const bodyHtml = (p: any) => {
     ))}
     {newsFor(p.id).length > 0 && (
       <section class="pd__news"><h3>In the news</h3><NewsList items={newsFor(p.id)} /></section>
+    )}
+    {toolsFor(p.id).length > 0 && (
+      <section class="pd__news"><h3>Interactive tools</h3><ToolList items={toolsFor(p.id)} /></section>
     )}
   </template>
 ))}

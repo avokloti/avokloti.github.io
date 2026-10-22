@@ -10,6 +10,8 @@ const projects = defineCollection({
     image: z.string(),
     theme: z.enum(themes.map((t) => t.id) as [string, ...string[]]),
     year: z.number(),
+    /** One or two sentences shown under the project's title on the Research page. */
+    summary: z.string().optional(),
     /** Publication ids (from publications.yaml) to list under "Articles". */
     articles: z.array(z.string()).optional(),
   }),

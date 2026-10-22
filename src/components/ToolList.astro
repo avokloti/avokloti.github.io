@@ -1,0 +1,23 @@
+---
+// Links to interactive demos, laid out like the news and article lists.
+import type { Tool } from '../lib/data';
+import { icons } from '../lib/icons';
+const { items } = Astro.props as { items: Tool[] };
+---
+{items.length > 0 && (
+  <ul class="news-list tool-list">
+    {items.map((t) => (
+      <li>
+        <a href={t.url} data-tool>
+          {t.image
+            ? <span class="news__thumb" aria-hidden="true"><img src={t.image} alt="" loading="lazy" /></span>
+            : <span class="news__thumb tool__icon" aria-hidden="true"><Fragment set:html={icons[t.icon ?? ''] ?? ''} /></span>}
+          <span class="news__text">
+            <span class="news__title">{t.title}</span>
+            <span class="news__meta tool__desc">{t.description}</span>
+          </span>
+        </a>
+      </li>
+    ))}
+  </ul>
+)}

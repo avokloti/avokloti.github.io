@@ -1,0 +1,1037 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source Separation Explorer</title>
+<!-- Page wrapper added for the website: the demo below was written as a fragment
+     that uses the Claude app's colour variables, so they are defined here.
+     The demo's own code follows unchanged, apart from the marked additions. -->
+<style>
+:root{
+  color-scheme:dark;
+  --font-sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --color-text-primary:#e8ecea;
+  --color-text-secondary:#a7b1ad;
+  --color-text-tertiary:#7d8884;
+  --color-text-danger:#ff8a80;
+  --color-border-secondary:#56615d;
+  --color-border-tertiary:#323b38;
+  --color-background-secondary:#1c2422;
+}
+html{background:#121816}
+.upload-own{font:inherit;font-size:13px;color:var(--color-text-secondary);background:none;
+  border:.5px solid var(--color-border-secondary);border-radius:6px;padding:.25rem .7rem;cursor:pointer}
+.upload-own:hover{color:var(--color-text-primary);background:var(--color-background-secondary)}
+</style>
+</head>
+<body>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans,system-ui);color:var(--color-text-primary);background:transparent}
+
+/* ── Outer centering shell ── */
+.app{max-width:1080px;margin:0 auto;padding:0 2rem}
+
+/* ── Header ── */
+.header{padding:1.1rem 0 .9rem;border-bottom:.5px solid var(--color-border-tertiary);margin-bottom:0}
+.header h2{font-size:18px;font-weight:500;margin-bottom:.65rem}
+.header-controls{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.header-controls label{font-size:14px;color:var(--color-text-secondary);white-space:nowrap}
+.header-controls input[type=range]{width:180px}
+.header-controls .val{font-size:14px;font-weight:500;min-width:40px;color:var(--color-text-primary)}
+#fileLabel{font-size:13px;color:var(--color-text-secondary);margin-left:auto}
+
+/* ── Upload ── */
+.upload-zone{border:1.5px dashed var(--color-border-secondary);border-radius:12px;
+  padding:3rem 2rem;text-align:center;cursor:pointer;transition:background .15s;
+  margin:2rem 0}
+.upload-zone:hover,.drag{background:var(--color-background-secondary)}
+.upload-zone p{font-size:14px;color:var(--color-text-secondary);margin-top:.5rem}
+input[type=file]{display:none}
+
+/* ── Status ── */
+.status{font-size:13px;color:var(--color-text-secondary);padding:.4rem 0}
+.err{color:var(--color-text-danger)}
+.hidden{display:none}
+
+/* ── Two-column body: 1fr | 2fr, inside the centered shell ── */
+.body-grid{
+  display:grid;
+  grid-template-columns:1fr 2fr;
+  gap:1.5rem;
+  padding:1.5rem 0 2rem;
+  align-items:start   /* columns size to their content, no forced equal height */
+}
+
+/* ── Left panel ── */
+.left-panel{display:flex;flex-direction:column;gap:1.1rem}
+.panel-title{font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px}
+.panel-desc{font-size:12px;color:var(--color-text-secondary);line-height:1.55;margin-bottom:.7rem}
+.ctrl-row{display:flex;align-items:center;gap:10px;margin-bottom:.55rem}
+.ctrl-row label{font-size:13px;color:var(--color-text-secondary);min-width:76px}
+.ctrl-row input[type=range]{flex:1}
+.ctrl-row .val{font-size:13px;font-weight:500;min-width:40px;text-align:right;color:var(--color-text-primary)}
+
+/* Square polar-plot: fixed max size so it never overwhelms the panel */
+.polar-wrap{
+  position:relative;
+  width:100%;
+  max-width:220px;      /* never wider than 220px */
+  margin:0 auto;        /* centre it in the column */
+}
+.polar-wrap::before{   /* padding-trick enforces square aspect ratio */
+  content:'';display:block;padding-bottom:100%
+}
+.polar-wrap canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+
+/* ── Right panel ── */
+.right-panel{display:flex;flex-direction:column;gap:1.1rem}
+.fig-title{font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px}
+.fig-desc{font-size:12px;color:var(--color-text-secondary);margin-bottom:6px;line-height:1.45}
+canvas.plot{display:block;width:100%;border-radius:4px}
+.audio-card{border:.5px solid var(--color-border-tertiary);border-radius:8px;padding:.75rem 1.1rem}
+.audio-card .alabel{font-size:13px;color:var(--color-text-secondary);margin-bottom:4px}
+audio{width:100%;margin-top:4px}
+</style>
+
+<!-- Everything lives inside the centering shell -->
+<div class="app">
+
+  <!-- ── Header ── -->
+  <div class="header">
+    <h2>Demo: Spatial Audio for Terrestrial Bioacoustics</h2>
+    <div class="header-controls">
+      <label>Start time</label>
+      <input type="range" id="startSlider" min="0" max="60" value="0" step="1">
+      <span class="val" id="startVal">0 s</span>
+      <span id="fileLabel"></span>
+      <!-- added: lets visitors swap in their own file after the example loads -->
+      <button type="button" class="upload-own" onclick="document.getElementById('fileInput').click()">Upload your own WAV</button>
+    </div>
+  </div>
+
+  <!-- ── Upload (shown until a file is analysed) ── -->
+  <div class="upload-zone" id="dropZone">
+    <p>Drop a 4-channel or 5.1-channel WAV here, or click to browse</p>
+    <input type="file" id="fileInput" accept=".wav,audio/*">
+  </div>
+  <div id="statusBar" class="status hidden"></div>
+
+  <!-- ── Main two-column layout — hidden until first analysis completes ── -->
+  <div class="body-grid hidden" id="mainUI">
+
+    <!-- Left: mask controls + polar plot -->
+    <div class="left-panel">
+      <div>
+        <div class="panel-title">Azimuth mask</div>
+        <p class="panel-desc">Wrapped Gaussian window. Pixels at the centre azimuth get full weight; others fall off as exp(−½(Δθ/σ)²).</p>
+        <div class="ctrl-row">
+          <label>Centre (°)</label>
+          <input type="range" id="aziCenter" min="-180" max="180" value="0" step="1">
+          <span class="val" id="aziCenterVal">0°</span>
+        </div>
+        <div class="ctrl-row">
+          <label>Width σ (°)</label>
+          <input type="range" id="aziSigma" min="5" max="180" value="180" step="1">
+          <span class="val" id="aziSigmaVal">180°</span>
+        </div>
+      </div>
+      <!-- Polar plot: square, max 220px, centred -->
+      <div class="polar-wrap">
+        <canvas id="gaussCanvas"></canvas>
+      </div>
+    </div>
+
+    <!-- Right: spectrogram → audio → histogram -->
+    <div class="right-panel">
+      <div>
+        <div class="fig-title">Masked spectrogram</div>
+        <div class="fig-desc">W-channel spectrogram after applying the azimuth mask. Energy outside the chosen direction is suppressed.</div>
+        <canvas class="plot" id="maskedCanvas" style="height:200px"></canvas>
+      </div>
+      <div class="audio-card">
+        <div class="alabel">Reconstructed audio</div>
+        <audio id="maskedAudio" controls></audio>
+      </div>
+      <div>
+        <div class="fig-title">Azimuth–time histogram</div>
+        <div class="fig-desc">Energy-weighted histogram of arrival angles over time.</div>
+        <canvas class="plot" id="histCanvas" style="height:160px"></canvas>
+      </div>
+    </div>
+
+  </div><!-- end .body-grid -->
+
+</div><!-- end .app -->
+
+<script>
+const NFFT = 1024, HOP = 256, NF = 160, NAZIM = 90;
+let S = {};
+
+const $ = id => document.getElementById(id);
+
+function setStatus(msg, err) {
+  const el = $('statusBar');
+  el.textContent = msg;
+  el.className = 'status' + (err ? ' err' : '') + (msg ? '' : ' hidden');
+}
+
+async function analyzeSegment() {
+  const t0 = +$('startSlider').value;
+  const segLen = 15;
+  const hp = 500, lp = 6000;   // fixed filter cutoffs
+
+  // Only hide the grid while computing (prevents empty-canvas flash on first load).
+  // On subsequent re-analyses leave it visible so the plots update in place.
+  if (!S.initialized) $('mainUI').classList.add('hidden');
+  setStatus('Analysing…');
+  await new Promise(r => setTimeout(r, 10));
+
+  const fs = S.fs, s0 = Math.floor(t0 * fs), s1 = Math.floor((t0 + segLen) * fs);
+  const len = s1 - s0;
+
+  let maxAll = 0;
+  const segs = S.raw.map(ch => { const s = ch.slice(s0, s1); for (const v of s) if (Math.abs(v) > maxAll) maxAll = Math.abs(v); return s; });
+  if (maxAll > 0) segs.forEach(s => { for (let i = 0; i < s.length; i++) s[i] /= maxAll; });
+
+  const filtered = segs.map(ch => bpFilter(ch, hp, lp, fs));
+
+  const Bmat = [[1,1,1,1],[1,1,-1,-1],[1,-1,1,-1],[1,-1,-1,1]];
+  const sB = Bmat.map(row => {
+    const out = new Float64Array(len);
+    for (let i = 0; i < len; i++) for (let j = 0; j < 4; j++) out[i] += row[j] * filtered[j][i];
+    return out;
+  });
+
+  const specs = sB.map(ch => computeSTFT(ch, NFFT, HOP));
+  const nT = specs[0].nT, nB = Math.min(NF, specs[0].nB);
+
+  const freqs = Array.from({length: nB}, (_, k) => k * fs / NFFT);
+  const times = Array.from({length: nT}, (_, t) => t0 + t * HOP / fs);
+
+  const azimuth = new Float32Array(nT * nB);
+  for (let t = 0; t < nT; t++) {
+    const wR = specs[0].re[t], wI = specs[0].im[t];
+    const xR = specs[1].re[t], xI = specs[1].im[t];
+    const yR = specs[2].re[t], yI = specs[2].im[t];
+    for (let f = 0; f < nB; f++) {
+      const wcy = wR[f]*yR[f] + wI[f]*yI[f];
+      const wcx = wR[f]*xR[f] + wI[f]*xI[f];
+      azimuth[t*nB + f] = Math.atan2(wcy, wcx);
+    }
+  }
+
+  const numTbins = Math.max(2, Math.round(segLen / 0.02));
+  const tEdges = Array.from({length: numTbins+1}, (_, i) => t0 + i * segLen / numTbins);
+  const aEdges = Array.from({length: NAZIM+1}, (_, i) => -Math.PI + i * 2*Math.PI / NAZIM);
+  const hist = Array.from({length: NAZIM}, () => new Float32Array(numTbins));
+
+  for (let t = 0; t < nT; t++) {
+    const ti = Math.min(numTbins-1, Math.max(0, Math.floor((times[t] - t0) / segLen * numTbins)));
+    const wR = specs[0].re[t], wI = specs[0].im[t];
+    for (let f = 0; f < nB; f++) {
+      const az = azimuth[t*nB + f];
+      const ai = Math.min(NAZIM-1, Math.max(0, Math.floor((az + Math.PI) / (2*Math.PI) * NAZIM)));
+      const w = Math.sqrt(wR[f]**2 + wI[f]**2);
+      hist[ai][ti] += w;
+    }
+  }
+  const logHist = hist.map(row => row.map(v => Math.log(v**2 + 0.000001)));
+
+  Object.assign(S, { specs, azimuth, freqs, times, logHist, aEdges, tEdges, nT, nB, segLen, t0, initialized: true });
+
+  $('mainUI').classList.remove('hidden');
+  setStatus('');
+  updateMask();
+}
+
+function updateMask() {
+  if (!S.specs) return;
+  const cDeg = +$('aziCenter').value, sDeg = +$('aziSigma').value;
+  drawGauss(cDeg, sDeg);
+
+  const {specs, azimuth, nT, nB} = S;
+  const maskedRe = [], maskedIm = [];
+  for (let t = 0; t < nT; t++) {
+    const re = new Float32Array(nB), im = new Float32Array(nB);
+    for (let f = 0; f < nB; f++) {
+      const w = gaussWrap(azimuth[t*nB+f], cDeg, sDeg);
+      re[f] = specs[0].re[t][f] * w;
+      im[f] = specs[0].im[t][f] * w;
+    }
+    maskedRe.push(re); maskedIm.push(im);
+  }
+
+  drawMaskedSpec(maskedRe, maskedIm);
+  drawHistogram(cDeg, sDeg);
+  renderMaskedAudio(maskedRe, maskedIm);
+}
+
+$('dropZone').addEventListener('click', () => $('fileInput').click());
+$('dropZone').addEventListener('dragover', e => { e.preventDefault(); $('dropZone').classList.add('drag'); });
+$('dropZone').addEventListener('dragleave', () => $('dropZone').classList.remove('drag'));
+$('dropZone').addEventListener('drop', e => { e.preventDefault(); $('dropZone').classList.remove('drag'); handleFile(e.dataTransfer.files[0]); });
+$('fileInput').addEventListener('change', () => handleFile($('fileInput').files[0]));
+$('startSlider').addEventListener('change', () => { if (S.raw) analyzeSegment(); });
+
+function gaussWrap(azRad, cDeg, sDeg) {
+  const cR = cDeg * Math.PI/180, sR = sDeg * Math.PI/180;
+  let d = azRad - cR;
+  while (d > Math.PI) d -= 2*Math.PI;
+  while (d < -Math.PI) d += 2*Math.PI;
+  return Math.exp(-0.5 * (d/sR)**2);
+}
+
+const PAD = {l:42, r:12, t:8, b:28};
+
+function drawAxes(ctx, W, H, xMin, xMax, yMin, yMax, xUnit, yUnit) {
+  const pw = W - PAD.l - PAD.r, ph = H - PAD.t - PAD.b;
+  ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--color-text-secondary') || '#888';
+  ctx.font = '11px ' + (getComputedStyle(document.body).getPropertyValue('--font-sans') || 'system-ui');
+  ctx.textAlign = 'right';
+  const nYticks = 4;
+  for (let i = 0; i <= nYticks; i++) {
+    const v = yMin + (yMax - yMin) * i / nYticks;
+    const y = PAD.t + ph - ph * i / nYticks;
+    ctx.fillText(Math.round(v), PAD.l - 4, y + 4);
+    ctx.strokeStyle = 'rgba(128,128,128,0.15)';
+    ctx.lineWidth = .5;
+    ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + pw, y); ctx.stroke();
+  }
+  const nXticks = 5;
+  ctx.textAlign = 'center';
+  for (let i = 0; i <= nXticks; i++) {
+    const v = xMin + (xMax - xMin) * i / nXticks;
+    const x = PAD.l + pw * i / nXticks;
+    ctx.fillText(v.toFixed(1), x, H - 6);
+  }
+  ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--color-text-tertiary') || '#aaa';
+  ctx.font = '10px ' + (getComputedStyle(document.body).getPropertyValue('--font-sans') || 'system-ui');
+  ctx.textAlign = 'center';
+  ctx.fillText(xUnit, PAD.l + pw/2, H - 0);
+  ctx.save(); ctx.translate(10, PAD.t + ph/2); ctx.rotate(-Math.PI/2);
+  ctx.textAlign = 'center'; ctx.fillText(yUnit, 0, 0); ctx.restore();
+}
+
+// mn / mx set the explicit colormap limits (values outside are clipped).
+// Pass null for mn or mx to fall back to the data min/max.
+function drawHeatmapInAxes(canvas, dataFlat, nCols, nRows, colorFn, xMin, xMax, yMin, yMax, xUnit, yUnit, mn=null, mx=null) {
+  const DPR = window.devicePixelRatio || 1;
+  const dispW = canvas.offsetWidth || 560;
+  const dispH = parseInt(canvas.style.height) || 180;
+  canvas.width = dispW * DPR;
+  canvas.height = dispH * DPR;
+  canvas.style.width = dispW + 'px';
+  canvas.style.height = dispH + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(DPR, DPR);
+  const W = dispW, H = dispH;
+  const pw = W - PAD.l - PAD.r, ph = H - PAD.t - PAD.b;
+
+  if (mn === null) { mn = Infinity; for (let i=0;i<dataFlat.length;i++) if(dataFlat[i]<mn) mn=dataFlat[i]; }
+  if (mx === null) { mx = -Infinity; for (let i=0;i<dataFlat.length;i++) if(dataFlat[i]>mx) mx=dataFlat[i]; }
+  const rng = mx - mn || 1;
+
+  const offC = document.createElement('canvas');
+  offC.width = nCols; offC.height = nRows;
+  const offCtx = offC.getContext('2d');
+  const img = offCtx.createImageData(nCols, nRows);
+  for (let r = 0; r < nRows; r++) for (let c = 0; c < nCols; c++) {
+    const v = Math.max(0, Math.min(1, (dataFlat[r*nCols + c] - mn) / rng));
+    const [R,G,B] = colorFn(v);
+    const idx = ((nRows-1-r)*nCols+c)*4;
+    img.data[idx]=R; img.data[idx+1]=G; img.data[idx+2]=B; img.data[idx+3]=255;
+  }
+  offCtx.putImageData(img, 0, 0);
+  ctx.drawImage(offC, PAD.l, PAD.t, pw, ph);
+  ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--color-border-tertiary') || 'rgba(0,0,0,0.15)';
+  ctx.lineWidth = .5;
+  ctx.strokeRect(PAD.l, PAD.t, pw, ph);
+  drawAxes(ctx, W, H, xMin, xMax, yMin, yMax, xUnit, yUnit);
+}
+/*
+function drawSpectrogram() {
+  const {specs, nT, nB, freqs, times, t0, segLen} = S;
+  const flat = new Float32Array(nT * nB);
+  for (let t = 0; t < nT; t++) for (let f = 0; f < nB; f++) {
+    const r = specs[0].re[t][f], im = specs[0].im[t][f];
+    flat[t*nB+f] = 20 * Math.log10(Math.sqrt(r*r+im*im) + 1e-6);
+  }
+  const c = $('specCanvas'); c.style.height = '180px';
+  drawHeatmapInAxes(c, flat, nT, nB, viridis, t0, t0+segLen, 0, freqs[nB-1], 'time (s)', 'freq (Hz)');
+} */
+
+function drawSpectrogram() {
+  const {specs, nT, nB, freqs, times, t0, segLen} = S;
+
+  const flat = new Float32Array(nT * nB);
+
+  for (let t = 0; t < nT; t++) {
+    for (let f = 0; f < nB; f++) {
+      const r = specs[0].re[t][f];
+      const im = specs[0].im[t][f];
+
+      // transpose indexing
+      flat[f * nT + t] = 20 * Math.log10(Math.sqrt(r*r + im*im) + 1e-6);
+    }
+  }
+
+  const c = $('specCanvas');
+  c.style.height = '200px';
+
+  drawHeatmapInAxes(
+    c,
+    flat,
+    nT,   // width (x = time)
+    nB,   // height (y = freq)
+    inferno,
+    t0,
+    t0 + segLen,
+    0,
+    freqs[nB - 1],
+    'time (s)',
+    'freq (Hz)',
+    -20, 40
+  );
+}
+/*
+function drawAzigram() {
+  const {azimuth, nT, nB, times, t0, segLen} = S;
+  const flat = new Float32Array(nT * nB);
+  for (let t = 0; t < nT; t++) for (let f = 0; f < nB; f++) flat[t*nB+f] = azimuth[t*nB+f];
+  const c = $('aziCanvas'); c.style.height = '180px';
+  drawHeatmapInAxes(c, flat, nT, nB, hsv, t0, t0+S.segLen, 0, S.freqs[nB-1], 'time (s)', 'freq (Hz)');
+}*/
+
+function drawAzigram() {
+  const {azimuth, nT, nB, t0, segLen, freqs} = S;
+
+  const flat = new Float32Array(nT * nB);
+
+  for (let t = 0; t < nT; t++) {
+    for (let f = 0; f < nB; f++) {
+      flat[f * nT + t] = azimuth[t * nB + f];
+    }
+  }
+
+  const c = $('aziCanvas');
+  c.style.height = '180px';
+
+  drawHeatmapInAxes(
+    c,
+    flat,
+    nT,
+    nB,
+    hsv,
+    t0,
+    t0 + segLen,
+    0,
+    freqs[nB - 1],
+    'time (s)',
+    'freq (Hz)'
+  );
+}
+/*
+function drawMaskedSpec(mRe, mIm) {
+  const {nT, nB, t0, segLen} = S;
+  const flat = new Float32Array(nT * nB);
+  for (let t = 0; t < nT; t++) for (let f = 0; f < nB; f++) {
+    flat[t*nB+f] = 20 * Math.log10(Math.sqrt(mRe[t][f]**2 + mIm[t][f]**2) + 1e-6);
+  }
+  const c = $('maskedCanvas'); c.style.height = '180px';
+  drawHeatmapInAxes(c, flat, nT, nB, viridis, t0, t0+segLen, 0, S.freqs[nB-1], 'time (s)', 'freq (Hz)');
+}*/
+
+function drawMaskedSpec(mRe, mIm) {
+  const {nT, nB, t0, segLen, freqs} = S;
+
+  const flat = new Float32Array(nT * nB);
+
+  for (let t = 0; t < nT; t++) {
+    for (let f = 0; f < nB; f++) {
+      const mag = Math.sqrt(mRe[t][f]**2 + mIm[t][f]**2);
+      flat[f * nT + t] = 20 * Math.log10(mag + 1e-6);
+    }
+  }
+
+  const c = $('maskedCanvas');
+  c.style.height = '200px';
+
+  drawHeatmapInAxes(
+    c,
+    flat,
+    nT,
+    nB,
+    inferno,
+    t0,
+    t0 + segLen,
+    0,
+    freqs[nB - 1],
+    'time (s)',
+    'freq (Hz)',
+    -20, 40
+  );
+}
+
+
+
+
+function syncSlider(id, outId, fmt) {
+  const upd = () => $(outId).textContent = fmt($(id).value);
+  upd();
+  $(id).addEventListener('input', upd);
+}
+syncSlider('startSlider','startVal', v => v + ' s');
+syncSlider('aziCenter','aziCenterVal', v => v + '°');
+syncSlider('aziSigma','aziSigmaVal', v => v + '°');
+
+$('aziCenter').addEventListener('input', updateMask);
+$('aziSigma').addEventListener('input', updateMask);
+
+// Manual WAV decoder — handles PCM 16/24/32-bit and float32, including
+// WAVE_FORMAT_EXTENSIBLE (0xFFFE), which browsers refuse for 24-bit files.
+function decodeWav(arrayBuffer) {
+  const dv = new DataView(arrayBuffer);
+  const u32 = o => dv.getUint32(o, true), u16 = o => dv.getUint16(o, true);
+  if (dv.getUint32(0, false) !== 0x52494646) throw new Error('Not a RIFF file');
+  if (dv.getUint32(8, false) !== 0x57415645) throw new Error('Not a WAVE file');
+  let pos = 12, fmt = null, dataOffset = -1, dataSize = -1;
+  while (pos + 8 <= arrayBuffer.byteLength) {
+    const id = String.fromCharCode(dv.getUint8(pos),dv.getUint8(pos+1),dv.getUint8(pos+2),dv.getUint8(pos+3));
+    const sz = u32(pos + 4);
+    if (id === 'fmt ') {
+      const audioFmt = u16(pos + 8);
+      let subFmt = audioFmt;
+      if (audioFmt === 0xFFFE && sz >= 40) subFmt = u16(pos + 8 + 24);
+      fmt = { subFmt, nChannels: u16(pos+10), sampleRate: u32(pos+12), blockAlign: u16(pos+20), bitsPerSample: u16(pos+22) };
+    } else if (id === 'data') { dataOffset = pos + 8; dataSize = sz; }
+    pos += 8 + sz + (sz & 1);
+    if (fmt && dataOffset >= 0) break;
+  }
+  if (!fmt) throw new Error('WAV fmt chunk not found');
+  if (dataOffset < 0) throw new Error('WAV data chunk not found');
+  const { subFmt, nChannels, sampleRate, bitsPerSample, blockAlign } = fmt;
+  if (nChannels < 4) throw new Error(`Need ≥ 4 channels (got ${nChannels})`);
+  if (nChannels > 6) throw new Error(`Expected 4 or 5.1-channel file (got ${nChannels} channels)`);
+  const nUse = 4, Bps = bitsPerSample >> 3;
+  const nFrames = Math.floor(dataSize / blockAlign);
+  const channels = Array.from({length: nUse}, () => new Float32Array(nFrames));
+  for (let f = 0; f < nFrames; f++) {
+    const base = dataOffset + f * blockAlign;
+    for (let c = 0; c < nUse; c++) {
+      const off = base + c * Bps;
+      let val;
+      if (subFmt === 1) {
+        if (bitsPerSample === 16) val = dv.getInt16(off, true) / 32768.0;
+        else if (bitsPerSample === 24) {
+          let s = dv.getUint8(off) | (dv.getUint8(off+1)<<8) | (dv.getUint8(off+2)<<16);
+          if (s >= 0x800000) s -= 0x1000000;
+          val = s / 8388608.0;
+        } else if (bitsPerSample === 32) val = dv.getInt32(off, true) / 2147483648.0;
+        else val = 0;
+      } else if (subFmt === 3) { val = dv.getFloat32(off, true); }
+      else throw new Error(`Unsupported WAV subformat: 0x${subFmt.toString(16)}`);
+      channels[c][f] = val;
+    }
+  }
+  return { channels, sampleRate, duration: nFrames / sampleRate };
+}
+
+async function handleFile(file) {
+  if (!file) return;
+  $('fileLabel').textContent = file.name;
+  setStatus('Decoding…');
+  try {
+    const ab = await file.arrayBuffer();
+    let decoded;
+    try { decoded = decodeWav(ab); }
+    catch (_) {
+      const ctx = new AudioContext();
+      const buf = await ctx.decodeAudioData(ab);
+      const nCh = buf.numberOfChannels;
+      if (nCh < 4) throw new Error(`Need ≥ 4 channels (got ${nCh})`);
+      if (nCh > 6) throw new Error(`Expected 4 or 5.1-channel file (got ${nCh} channels)`);
+      decoded = { channels: Array.from({length:4},(_,c)=>new Float32Array(buf.getChannelData(c))), sampleRate: buf.sampleRate, duration: buf.duration };
+    }
+    S.fs = decoded.sampleRate; S.dur = decoded.duration; S.raw = decoded.channels;
+    $('startSlider').max = Math.max(0, Math.floor(S.dur) - 15);
+    $('dropZone').style.display = 'none';
+    setStatus('');
+    await analyzeSegment();
+  } catch(e) { setStatus('Decode error: ' + e.message, true); }
+}
+
+function drawHistogram(cDeg, sDeg) {
+  const {logHist, aEdges, tEdges, t0, segLen} = S;
+  const nA = logHist.length, nT2 = logHist[0].length;
+
+  // Apply Gaussian mask weight to each azimuth row
+  const flat = new Float32Array(nA * nT2);
+  for (let a = 0; a < nA; a++) {
+    /*const az = (aEdges[a] + aEdges[a+1]) / 2;
+    const w = gaussWrap(az, cDeg, sDeg);*/
+    for (let t = 0; t < nT2; t++)
+      flat[a*nT2 + t] = logHist[a][t];/* * (0.15 + 0.85*w);*/
+  }
+
+  // Histogram equalisation: map values through their empirical CDF so that
+  // the full colormap range is used by the actual cluster structure rather
+  // than being compressed by the large number of near-zero background bins.
+  const sorted = Float32Array.from(flat).sort();
+  const N = sorted.length;
+  const equalised = new Float32Array(N);
+  for (let i = 0; i < N; i++) {
+    // Binary-search rank of flat[i] in sorted array → normalised CDF value
+    let lo = 0, hi = N - 1;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      sorted[mid] < flat[i] ? lo = mid + 1 : hi = mid;
+    }
+    equalised[i] = lo / (N - 1);
+  }
+
+  const c = $('histCanvas'); c.style.height = '200px';
+  // Pass loPerc=0/hiPerc=100 — equalised data already spans [0,1]
+  drawHeatmapInAxes(c, equalised, nT2, nA, blackBlueWhite, t0, t0+segLen, -180, 180, 'time (s)', 'azimuth (°)');
+
+  overlayMaskLines(c, cDeg, sDeg);
+}
+
+function overlayMaskLines(canvas, cDeg, sDeg) {
+  const ctx = canvas.getContext('2d');
+
+  const W = canvas.width / (window.devicePixelRatio || 1);
+  const H = canvas.height / (window.devicePixelRatio || 1);
+
+  const pw = W - PAD.l - PAD.r;
+  const ph = H - PAD.t - PAD.b;
+
+  function yFromDeg(deg) {
+    return PAD.t + ph * (1 - (deg + 180) / 360);
+  }
+
+  function wrapDeg(x) {
+  while (x > 180) x -= 360;
+  while (x < -180) x += 360;
+  return x;
+  }
+
+  const y0 = yFromDeg(cDeg);
+  const y1 = yFromDeg(wrapDeg(cDeg - sDeg));
+  const y2 = yFromDeg(wrapDeg(cDeg + sDeg));
+
+  ctx.save();
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+  ctx.lineWidth = 1.5;
+
+  // mean
+  ctx.beginPath();
+  ctx.moveTo(PAD.l, y0);
+  ctx.lineTo(PAD.l + pw, y0);
+  ctx.stroke();
+
+  // ±sigma dashed
+  ctx.setLineDash([6,4]);
+
+  ctx.beginPath();
+  ctx.moveTo(PAD.l, y1);
+  ctx.lineTo(PAD.l + pw, y1);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(PAD.l, y2);
+  ctx.lineTo(PAD.l + pw, y2);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+/*
+function drawGauss(cDeg, sDeg) {
+  const canvas = $('gaussCanvas');
+  const DPR = window.devicePixelRatio || 1;
+  const W = canvas.offsetWidth || 560, H = 40;
+  canvas.width = W*DPR; canvas.height = H*DPR;
+  canvas.style.width = W+'px'; canvas.style.height = H+'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(DPR, DPR);
+  const isDark = window.matchMedia('(prefers-color-scheme:dark)').matches;
+  ctx.fillStyle = isDark ? 'rgba(130,130,255,0.18)' : 'rgba(80,80,220,0.1)';
+  ctx.strokeStyle = isDark ? 'rgba(160,160,255,0.7)' : 'rgba(80,80,220,0.6)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  for (let i = 0; i <= W; i++) {
+    const deg = -180 + 360 * i / W;
+    const g = gaussWrap(deg * Math.PI/180, cDeg, sDeg);
+    const y = H * (1 - g * 0.9) - 2;
+    i === 0 ? ctx.moveTo(i, y) : ctx.lineTo(i, y);
+  }
+  ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath(); ctx.fill();
+  ctx.beginPath();
+  for (let i = 0; i <= W; i++) {
+    const deg = -180 + 360 * i / W;
+    const g = gaussWrap(deg * Math.PI/180, cDeg, sDeg);
+    const y = H * (1 - g * 0.9) - 2;
+    i === 0 ? ctx.moveTo(i, y) : ctx.lineTo(i, y);
+  }
+  ctx.stroke();
+  const cs = getComputedStyle(document.body);
+  ctx.fillStyle = cs.getPropertyValue('--color-text-tertiary') || '#aaa';
+  ctx.font = '10px system-ui';
+  ctx.textAlign = 'left'; ctx.fillText('−180°', 2, H-2);
+  ctx.textAlign = 'center'; ctx.fillText('0°', W/2, H-2);
+  ctx.textAlign = 'right'; ctx.fillText('+180°', W-2, H-2);
+}*/
+
+function drawGauss(cDeg, sDeg) {
+  const canvas = $('gaussCanvas');
+  const DPR = window.devicePixelRatio || 1;
+
+  // The canvas CSS size is 100% of its absolutely-positioned parent, which
+  // uses padding-bottom:100% to enforce a square. Read the rendered width.
+  const side = canvas.offsetWidth || 240;
+
+  // Set physical pixel dimensions to a perfect square
+  canvas.width  = side * DPR;
+  canvas.height = side * DPR;
+  // CSS size is already set by the .polar-wrap positioning; reinforce explicitly
+  canvas.style.width  = side + 'px';
+  canvas.style.height = side + 'px';
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(DPR, DPR);
+  ctx.clearRect(0, 0, side, side);
+
+  const cx = side / 2, cy = side / 2;
+  // Leave 22px margin on each side for axis labels
+  const margin = 22;
+  const R = side / 2 - margin;
+
+  const fg = getComputedStyle(document.body).getPropertyValue('--color-text-secondary') || '#888';
+
+  // Reference circle
+  ctx.strokeStyle = 'rgba(128,128,128,0.25)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, 0, 2 * Math.PI);
+  ctx.stroke();
+
+  // Inner reference ring at 50%
+  ctx.strokeStyle = 'rgba(128,128,128,0.12)';
+  ctx.lineWidth = .5;
+  ctx.beginPath();
+  ctx.arc(cx, cy, R * 0.5, 0, 2 * Math.PI);
+  ctx.stroke();
+
+  // Gaussian polar lobe
+  ctx.beginPath();
+  for (let i = 0; i <= 360; i++) {
+    const deg = i - 180;
+    const g = gaussWrap(deg * Math.PI / 180, cDeg, sDeg);
+    const rr = R * (0.08 + 0.92 * g);
+    const th = deg * Math.PI / 180;
+    const x = cx + rr * Math.cos(th);
+    const y = cy - rr * Math.sin(th);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(100,140,255,0.15)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(140,180,255,0.9)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Centre-azimuth spoke
+  const th0 = cDeg * Math.PI / 180;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(cx + R * Math.cos(th0), cy - R * Math.sin(th0));
+  ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Cardinal labels — nudged just outside R
+  const labelR = R + 13;
+  ctx.fillStyle = fg;
+  ctx.font = `10px ${getComputedStyle(document.body).getPropertyValue('--font-sans') || 'system-ui'}`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('0°',    cx + labelR, cy);
+  ctx.fillText('180°',  cx - labelR, cy);
+  ctx.fillText('+90°',  cx,          cy - labelR);
+  ctx.fillText('−90°',  cx,          cy + labelR);
+}
+
+function hsv(t) {
+  t = Math.max(0,Math.min(1,t));
+  const h=t*360,s=0.85,v=0.95,c=v*s,x=c*(1-Math.abs((h/60)%2-1)),m=v-c;
+  let r,g,b;
+  if(h<60){r=c;g=x;b=0;}else if(h<120){r=x;g=c;b=0;}else if(h<180){r=0;g=c;b=x;}else if(h<240){r=0;g=x;b=c;}else if(h<300){r=x;g=0;b=c;}else{r=c;g=0;b=x;}
+  return[Math.round((r+m)*255),Math.round((g+m)*255),Math.round((b+m)*255)];
+}
+
+function blackBlueWhite(t) {
+  // clamp
+  t = Math.max(0, Math.min(1, t));
+
+  // anchor colors (dark → bright)
+  const stops = [
+    [0,   0,   0],    // black
+    [0,   0, 120],    // deep blue
+    [0, 120, 255],    // blue
+    [0, 220, 220],    // cyan
+    [255, 255, 0],    // yellow
+    [255, 255, 255]   // white
+  ];
+
+  const n = stops.length - 1;
+  const x = t * n;
+  const i = Math.floor(x);
+  const f = x - i;
+
+  const c0 = stops[i];
+  const c1 = stops[Math.min(i + 1, n)];
+
+  const r = c0[0] + f * (c1[0] - c0[0]);
+  const g = c0[1] + f * (c1[1] - c0[1]);
+  const b = c0[2] + f * (c1[2] - c0[2]);
+
+  return [r|0, g|0, b|0];
+}
+
+// Inferno colormap: black → deep purple → red → orange → bright yellow-white.
+// Perceptually uniform; fades to black at low end, high contrast at bright end.
+function inferno(t) {
+  t = Math.max(0, Math.min(1, t));
+  const stops = [
+    [0,0,4],[20,11,53],[58,9,99],[96,19,110],
+    [133,33,107],[169,46,94],[203,65,73],[230,93,47],
+    [247,131,17],[252,174,47],[252,214,107],[252,255,164]
+  ];
+  const n = stops.length - 1;
+  const x = t * n;
+  const i = Math.min(Math.floor(x), n - 1);
+  const f = x - i;
+  const [r0,g0,b0] = stops[i], [r1,g1,b1] = stops[i+1];
+  return [Math.round(r0+f*(r1-r0)), Math.round(g0+f*(g1-g0)), Math.round(b0+f*(b1-b0))];
+}
+
+// FFT-domain brick-wall bandpass filter.
+// Zeroes all spectrum bins outside [lo, hi] Hz then IFFTs back.
+// Perfectly linear-phase with no coefficient tuning required.
+function bpFilter(data, lo, hi, fs) {
+  const N = data.length;
+  let M = 1; while (M < N) M <<= 1; // pad to next power-of-2
+
+  const re = new Float64Array(M), im = new Float64Array(M);
+  for (let i = 0; i < N; i++) re[i] = data[i];
+
+  fftComplex(re, im); // forward FFT in-place
+
+  const loBin = Math.round(lo * M / fs);
+  const hiBin = Math.round(hi * M / fs);
+  for (let k = 0; k < M; k++) {
+    const freq = k <= (M >> 1) ? k : M - k; // fold negative frequencies
+    if (freq < loBin || freq > hiBin) { re[k] = 0; im[k] = 0; }
+  }
+
+  // IFFT via conjugate trick: IFFT(X) = conj(FFT(conj(X))) / M
+  for (let i = 0; i < M; i++) im[i] = -im[i];
+  fftComplex(re, im);
+  for (let i = 0; i < M; i++) im[i] = -im[i] / M;
+
+  const out = new Float64Array(N);
+  for (let i = 0; i < N; i++) out[i] = re[i] / M; // take real part
+  return out;
+}
+
+// In-place complex Cooley-Tukey FFT (power-of-2 length required)
+function fftComplex(re, im) {
+  const N = re.length;
+  const bits = Math.round(Math.log2(N));
+  for (let i = 0; i < N; i++) {
+    let j = 0, x = i;
+    for (let b = 0; b < bits; b++) { j = (j << 1) | (x & 1); x >>= 1; }
+    if (j > i) {
+      let t = re[i]; re[i] = re[j]; re[j] = t;
+      t = im[i]; im[i] = im[j]; im[j] = t;
+    }
+  }
+  for (let len = 2; len <= N; len <<= 1) {
+    const ang = -2 * Math.PI / len;
+    const wr = Math.cos(ang), wi = Math.sin(ang);
+    for (let i = 0; i < N; i += len) {
+      let cr = 1, ci = 0;
+      for (let j = 0; j < len / 2; j++) {
+        const ur = re[i+j], ui = im[i+j];
+        const vr = re[i+j+len/2]*cr - im[i+j+len/2]*ci;
+        const vi = re[i+j+len/2]*ci + im[i+j+len/2]*cr;
+        re[i+j] = ur+vr; im[i+j] = ui+vi;
+        re[i+j+len/2] = ur-vr; im[i+j+len/2] = ui-vi;
+        const ncr = cr*wr - ci*wi; ci = cr*wi + ci*wr; cr = ncr;
+      }
+    }
+  }
+}
+
+function computeSTFT(signal, nfft, hop) {
+  const win = hannWindow(nfft);
+  const nT = Math.floor((signal.length - nfft) / hop) + 1;
+  const nB = nfft/2 + 1;
+  const re = [], im = [];
+  for (let t = 0; t < nT; t++) {
+    const buf = new Float64Array(nfft);
+    for (let i = 0; i < nfft; i++) buf[i] = (signal[t*hop+i]||0) * win[i];
+    const {re: fr, im: fi} = fft(buf);
+    re.push(fr.subarray(0, nB));
+    im.push(fi.subarray(0, nB));
+  }
+  return { re, im, nT, nB };
+}
+
+function hannWindow(N) {
+  const w = new Float64Array(N);
+  for (let i=0;i<N;i++) w[i] = 0.5*(1-Math.cos(2*Math.PI*i/(N-1)));
+  return w;
+}
+
+function fft(signal) {
+  const N = signal.length;
+  const re = new Float64Array(N), im = new Float64Array(N);
+  const bits = Math.log2(N);
+  for (let i=0;i<N;i++) {
+    let j=0, x=i;
+    for (let b=0;b<bits;b++){j=(j<<1)|(x&1);x>>=1;}
+    re[j] = signal[i];
+  }
+  for (let len=2; len<=N; len<<=1) {
+    const ang = -2*Math.PI/len;
+    const wRe = Math.cos(ang), wIm = Math.sin(ang);
+    for (let i=0;i<N;i+=len) {
+      let curRe=1, curIm=0;
+      for (let j=0;j<len/2;j++) {
+        const uR=re[i+j], uI=im[i+j];
+        const vR=re[i+j+len/2]*curRe - im[i+j+len/2]*curIm;
+        const vI=re[i+j+len/2]*curIm + im[i+j+len/2]*curRe;
+        re[i+j]=uR+vR; im[i+j]=uI+vI;
+        re[i+j+len/2]=uR-vR; im[i+j+len/2]=uI-vI;
+        const nR=curRe*wRe-curIm*wIm;
+        curIm=curRe*wIm+curIm*wRe; curRe=nR;
+      }
+    }
+  }
+  return {re, im};
+}
+
+
+
+function istft(reSpec, imSpec, nfft, hop) {
+  const nT = reSpec.length, nB = reSpec[0].length;
+  const win = hannWindow(nfft);
+  const outLen = (nT-1)*hop + nfft;
+  const out = new Float64Array(outLen);
+  const norm = new Float64Array(outLen);
+  for (let t=0;t<nT;t++) {
+    // Build full two-sided spectrum with Hermitian symmetry
+    const fullRe = new Float64Array(nfft), fullIm = new Float64Array(nfft);
+    for (let k=0;k<nB;k++) { fullRe[k]=reSpec[t][k]; fullIm[k]=imSpec[t][k]; }
+    for (let k=nB;k<nfft;k++) { fullRe[k]=reSpec[t][nfft-k]||0; fullIm[k]=-(imSpec[t][nfft-k]||0); }
+    // IFFT via conjugate trick: IFFT(X) = conj(FFT(conj(X))) / N
+    for (let k=0;k<nfft;k++) fullIm[k] = -fullIm[k];
+    fftComplex(fullRe, fullIm);
+    for (let i=0;i<nfft;i++) { out[t*hop+i] += (fullRe[i]/nfft)*win[i]; norm[t*hop+i] += win[i]*win[i]; }
+  }
+  for (let i=0;i<outLen;i++) if(norm[i]>1e-8) out[i]/=norm[i];
+  return out;
+}
+
+function audioBlob(samples, fs) {
+  const N=samples.length, buf=new ArrayBuffer(44+N*2), v=new DataView(buf);
+  const ws=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));};
+  ws(0,'RIFF');v.setUint32(4,36+N*2,true);ws(8,'WAVE');ws(12,'fmt ');
+  v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+  v.setUint32(24,fs,true);v.setUint32(28,fs*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);
+  ws(36,'data');v.setUint32(40,N*2,true);
+  let mx=0; for(const s of samples) if(Math.abs(s)>mx)mx=Math.abs(s); mx=mx||1;
+  for(let i=0;i<N;i++) v.setInt16(44+i*2,Math.max(-1,Math.min(1,samples[i]/mx))*32767,true);
+  return new Blob([buf],{type:'audio/wav'});
+}
+
+
+function applyFade(audio, fs, fadeMs=30) {
+  const n = Math.floor(fs * fadeMs / 1000);
+
+  // fade in
+  for (let i = 0; i < n; i++) {
+    const w = 0.5 * (1 - Math.cos(Math.PI * i / n));
+    audio[i] *= w;
+  }
+
+  // fade out
+  for (let i = 0; i < n; i++) {
+    const idx = audio.length - n + i;
+    const w = 0.5 * (1 + Math.cos(Math.PI * i / n));
+    audio[idx] *= w;
+  }
+}
+
+function renderMaskedAudio(mRe, mIm) {
+  const audio = istft(mRe, mIm, NFFT, HOP);
+
+  // ---- Compute RMS ----
+  let sumSq = 0;
+
+  for (let i = 0; i < audio.length; i++) {
+    sumSq += audio[i] * audio[i];
+  }
+
+  const rms = Math.sqrt(sumSq / audio.length);
+
+  // ---- RMS normalization target ----
+  const targetRMS = 0.15;
+
+  if (rms > 1e-8) {
+    let scale = targetRMS / rms;
+
+    // ---- Prevent clipping ----
+    let peak = 0;
+
+    for (let i = 0; i < audio.length; i++) {
+      const a = Math.abs(audio[i]);
+      if (a > peak) peak = a;
+    }
+
+    if (peak * scale > 0.95) {
+      scale = 0.95 / peak;
+    }
+
+    // ---- Apply scaling ----
+    for (let i = 0; i < audio.length; i++) {
+      audio[i] *= scale;
+    }
+  }
+
+  applyFade(audio, S.fs, fadeMs=30)
+
+  $('maskedAudio').src =
+    URL.createObjectURL(audioBlob(audio, S.fs));
+}
+</script>
+<script>
+// Added for the website: on open, load a 30-second excerpt of a 4-channel
+// recording from Colorado so there is something to explore right away.
+// Needs the page to be served over http (fetch is blocked for file:// pages);
+// if it fails, the upload area works as usual.
+(async () => {
+  const path = 'data/azigram_colorado_sample_30s.wav';
+  try {
+    const res = await fetch(path);
+    if (!res.ok) return;
+    setStatus('Loading example recording…');
+    await handleFile(new File([await res.blob()], path.split('/').pop()));
+  } catch (_) { setStatus(''); }
+})();
+</script>
+</body>
+</html>

@@ -6,43 +6,67 @@ import { icons } from '../lib/icons';
 import Email from '../components/Email.astro';
 import { news } from '../lib/data';
 import NewsList from '../components/NewsList.astro';
+import { tools } from '../lib/data';
 // Main research themes shown on the home page (set "home": false in research-themes.json to hide one).
 const current = themes.filter((t) => !t.earlier && t.home !== false);
 ---
 <Base banner="/images/banners/chief_mountain.jpg" caption="Chief Mountain, Blackfeet Reservation, 2023">
   <div class="home">
     <aside class="profile">
-      <img class="affil-logo" src="/images/home/yang-center-logo.png" width="1000" height="326" alt={site.affiliation} />
+      <img class="affil-logo affil-logo--light" src="/images/home/yang-center-logo.png" width="1000" height="326" alt={site.affiliation} />
+      <img class="affil-logo affil-logo--dark" src="/images/home/yang-center-logo-white.png" width="1000" height="320" alt={site.affiliation} />
       <img class="portrait" src="/images/profile_hike.jpg" width="900" height="1200" alt={`${site.name} on a hike in Taiwan's Yushan National Park.`} />
-      <ul class="profile-icons">
-        <li><Email icon /></li>
-        {site.links.map((l) => (
-          <li><a href={l.href} aria-label={l.label} title={l.label}><Fragment set:html={icons[l.icon]} /></a></li>
-        ))}
-      </ul>
+      <div class="profile-links">
+        <ul class="profile-icons">
+          <li><Email icon /></li>
+          {site.links.map((l) => (
+            <li><a href={l.href} aria-label={l.label} title={l.label}><Fragment set:html={icons[l.icon]} /></a></li>
+          ))}
+        </ul>
+        <a class="cv-button" href="/files/cv.pdf"><Fragment set:html={icons['file-arrow-down']} /><span>Download CV</span></a>
+      </div>
     </aside>
 
     <div class="prose">
       <h1>{site.name}</h1>
       <p class="lede">My goal is to develop practical, robust, adaptable tools to provide high-quality data for informing wildlife conservation efforts.</p>
 
-      <p>I am now a Postdoctoral Fellow at the <a href="https://www.birds.cornell.edu/ccb/">Cornell K. Lisa Yang Center for Conservation Bioacoustics</a> at Cornell University. I completed bachelor’s degrees in applied mathematics and computer science at the University of Washington, followed by a PhD in applied mathematics at Harvard, where I worked on optimization, machine learning, and robotics.</p>
+      <p>I am now a Postdoctoral Fellow at the <a href="https://www.birds.cornell.edu/ccb/">Cornell K. Lisa Yang Center for Conservation Bioacoustics</a> at <strong>Cornell University</strong>. I completed bachelor’s degrees in applied mathematics and computer science at the <strong>University of Washington</strong>, followed by a PhD in applied mathematics at <strong>Harvard University</strong>, where I worked on optimization, machine learning, and robotics.</p>
 
       <p>My current research focuses on automated passive acoustic monitoring, with an emphasis on sound source separation and localization using microphone and hydrophone arrays. I'm very interested in expanding to other forms of conservation technology, and am also curious about broader computational methods towards sustainability and social impact.</p>
 
-      <p>If you'd like to talk, please feel free to reach me at <strong><Email /></strong>!</p>
+      <p><strong>If you'd like to talk, please feel free to reach me at <Email /></strong>!</p>
 
       <h2>Research</h2>
-      <ul class="themes-list">
+      <ul class="demo-cards demo-cards--wide">
         {current.map((t) => (
           <li>
-            <a class:list={[{ 'has-thumb': t.home_image }]} href={`/research/#${t.id}`}>
-              {t.home_image && <img class="theme-thumb" src={t.home_image} alt={t.home_image_alt ?? ''} loading="lazy" />}
-              <span class="theme-text"><strong>{t.title}</strong><span>{t.home_blurb ?? t.blurb}</span></span>
+            <a href={`/research/#${t.id}`}>
+              {t.home_image && <span class="demo-card__thumb"><img src={t.home_image} alt={t.home_image_alt ?? ''} loading="lazy" /></span>}
+              <span class="demo-card__title">{t.title}</span>
+              <span class="demo-card__blurb">{t.home_blurb ?? t.blurb}</span>
             </a>
           </li>
         ))}
       </ul>
+      {tools.some((t) => t.home) && (
+        <>
+          <h2>Demos</h2>
+          <ul class="demo-cards">
+            {tools.filter((t) => t.home).map((t) => (
+              <li>
+                <a href={t.url} data-tool>
+                  {t.image
+                    ? <span class="demo-card__thumb"><img src={t.image} alt="" loading="lazy" /></span>
+                    : <span class="demo-card__thumb tool__icon" aria-hidden="true"><Fragment set:html={icons[t.icon ?? ''] ?? ''} /></span>}
+                  <span class="demo-card__title">{t.short ?? t.title}</span>
+                  <span class="demo-card__blurb">{t.description}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
 
       <h2>In the news</h2>
       <NewsList items={news} />

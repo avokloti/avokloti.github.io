@@ -81,94 +81,130 @@
  ],
  "photos": [
   {
-   "title": "Boston Lights",
-   "slug": "boston-lights",
-   "w": 2000,
-   "h": 1125
+   "slug": "peacock",
+   "alt": "A peacock in dry grass",
+   "w": 724,
+   "h": 1086
   },
   {
-   "title": "Busy Pollinator",
-   "slug": "busy-pollinator",
+   "slug": "painted-storks",
+   "alt": "Two painted storks on a rock by a river, with more nesting in a tree",
+   "w": 1086,
+   "h": 724
+  },
+  {
+   "slug": "bonnet-macaque",
+   "alt": "A bonnet macaque looking at the camera",
+   "w": 1086,
+   "h": 724
+  },
+  {
+   "slug": "penguin",
+   "alt": "An African penguin swimming underwater",
+   "w": 1024,
+   "h": 768
+  },
+  {
+   "slug": "brown-pelican",
+   "alt": "A brown pelican in flight against a white sky",
+   "w": 886,
+   "h": 886
+  },
+  {
+   "slug": "cormorant-colony",
+   "alt": "A large colony of cormorants on a rocky island",
+   "w": 1086,
+   "h": 724
+  },
+  {
+   "slug": "overhead",
+   "alt": "A ray swimming overhead, seen from below through a round aquarium window",
+   "w": 886,
+   "h": 886
+  },
+  {
+   "slug": "monarch",
+   "alt": "A monarch butterfly on a yellow flower, backlit by the sun",
+   "w": 768,
+   "h": 1024
+  },
+  {
+   "slug": "tree-climbers",
+   "alt": "Three climbers resting high in a giant conifer",
+   "w": 724,
+   "h": 1086
+  },
+  {
+   "slug": "vernal-fall",
+   "alt": "Vernal Fall in Yosemite with a rainbow in the mist",
+   "w": 768,
+   "h": 1024
+  },
+  {
+   "slug": "autumn-lakes",
+   "alt": "Lakes among autumn forests, seen from a rocky summit",
+   "w": 1288,
+   "h": 610
+  },
+  {
+   "slug": "coastal-wildflowers",
+   "alt": "A collage of seven coastal wildflowers",
+   "w": 886,
+   "h": 886
+  },
+  {
+   "slug": "waterfall-rainbow",
+   "alt": "A waterfall with a rainbow in a green canyon",
+   "w": 1024,
+   "h": 768
+  },
+  {
+   "slug": "hermit-crab",
+   "alt": "A hermit crab on a sandy beach",
    "w": 2000,
+   "h": 1500
+  },
+  {
+   "slug": "gold-dust-day-gecko",
+   "alt": "A gold dust day gecko climbing a white post",
+   "w": 1500,
    "h": 2000
   },
   {
-   "title": "City Lights",
-   "slug": "city-lights",
+   "slug": "recorder-in-tree",
+   "alt": "An acoustic recorder strapped to a tree trunk, with a climber above",
    "w": 2000,
    "h": 1500
   },
   {
-   "title": "Crane Beach",
-   "slug": "crane-beach",
-   "w": 2000,
-   "h": 594
+   "slug": "avalanche-lilies",
+   "alt": "A slope of white avalanche lilies",
+   "w": 1182,
+   "h": 665
   },
   {
-   "title": "Dawn Chorus",
-   "slug": "dawn-chorus",
-   "w": 2000,
-   "h": 1500
+   "slug": "mountain-trail",
+   "alt": "A narrow trail cut into a cliff above rugged peaks",
+   "w": 1024,
+   "h": 768
   },
   {
-   "title": "Hyak",
-   "slug": "hyak",
-   "w": 2000,
-   "h": 1500
+   "slug": "swiftone-sunset",
+   "alt": "A SwiftOne acoustic recorder held up against a prairie sunset",
+   "w": 1024,
+   "h": 768
   },
   {
-   "title": "In Bloom",
-   "slug": "in-bloom",
-   "w": 1254,
-   "h": 1254
+   "slug": "skyline-reflections",
+   "alt": "A city skyline at night reflected in water, turned sideways",
+   "w": 632,
+   "h": 1246
   },
   {
-   "title": "Joshua Tree National Park",
-   "slug": "joshua-tree-national-park",
-   "w": 2000,
-   "h": 1333
-  },
-  {
-   "title": "La Jolla",
-   "slug": "la-jolla",
-   "w": 2000,
-   "h": 1125
-  },
-  {
-   "title": "Montlake",
-   "slug": "montlake",
-   "w": 2000,
-   "h": 1125
-  },
-  {
-   "title": "Newport Coast",
-   "slug": "newport-coast",
-   "w": 2000,
-   "h": 1331
-  },
-  {
-   "title": "Piglets Corner",
-   "slug": "piglets-corner",
-   "w": 2000,
-   "h": 1500
-  },
-  {
-   "title": "Signs of Spring",
-   "slug": "signs-of-spring",
-   "w": 2000,
-   "h": 1500
-  },
-  {
-   "title": "Widener Library",
-   "slug": "widener-library",
-   "w": 2000,
-   "h": 1500
-  },
-  {
-   "title": "Worlds End",
-   "slug": "worlds-end",
-   "w": 2000,
-   "h": 1500
+   "slug": "forest-stairs",
+   "alt": "Stone stairs descending through forest toward a sunset",
+   "w": 768,
+   "h": 1024
   }
  ]
 }

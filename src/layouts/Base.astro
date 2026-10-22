@@ -82,6 +82,22 @@ const isCurrent = (href: string) => {
     </div>
 
     <script is:inline>
+      // Links to other websites, PDFs, and interactive tools open in a new tab. This also covers
+      // links inside project pop-ups, which are stored in <template> elements.
+      (() => {
+        const mark = (root) => root.querySelectorAll('a[href]').forEach((a) => {
+          let url;
+          try { url = new URL(a.getAttribute('href'), location.href); } catch (e) { return; }
+          const external = /^https?:$/.test(url.protocol) && url.host !== location.host;
+          if (external || /\.pdf$/i.test(url.pathname) || a.hasAttribute('data-tool')) {
+            a.target = '_blank';
+            a.rel = 'noopener';
+          }
+        });
+        mark(document);
+        document.querySelectorAll('template').forEach((t) => mark(t.content));
+      })();
+
       // A preview image hosted elsewhere that fails to load reveals the local image behind it.
       document.querySelectorAll('img[data-remote]').forEach((img) => {
         const drop = () => img.remove();

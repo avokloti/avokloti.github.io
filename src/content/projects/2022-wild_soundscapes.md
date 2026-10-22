@@ -1,9 +1,10 @@
 ---
-title: "Source Separation in Natural Soundscapes"
-excerpt: "Research project in collaboration with the K. Lisa Yang Center for Conservation Bioacoustics."
+title: "Source Separation (In The Wild)"
+excerpt: ""
 image: "/images/proposal_figures_v3.jpg"
 theme: "terrestrial"
 year: 2022
+summary: "Building on experimental validation above, I am now developing techniques for continuous and robust source separation in natural soundscapes to improve classification, understand spatial use, and move towards local counts of vocal individuals."
 ---
 
 ![](/images/proposal_figures_v3.jpg)

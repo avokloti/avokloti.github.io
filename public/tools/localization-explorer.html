@@ -1,0 +1,3871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TDoA Localization Explorer</title>
+<script>
+  // Applied synchronously in <head> so the correct theme is present before
+  // first paint (avoids a flash of dark-then-light or vice versa).
+  (function () {
+    try {
+      var saved = localStorage.getItem('tdoa-theme');
+      if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    } catch (err) { /* localStorage unavailable — default (dark) stays */ }
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0B0F14;
+    --panel: #12181F;
+    --panel-2: #0E1319;
+    --border: #232B35;
+    --text: #E8EDF2;
+    --text-muted: #7C8798;
+    --text-faint: #4C5666;
+    --accent: #4FD8C4;
+    --accent-dim: #245952;
+    --accent-warm: #F2A65A;
+    --accent-warm-dim: #5A4128;
+    --danger: #E2637A;
+    /* The spectrogram and map/heatmap containers get their own light-mode
+       backgrounds below, but their *content* colormaps (drawn in JS, not
+       CSS) are calibrated per-theme too — see dbToColor/likelihoodColor.
+       The white hyperbola lines and marker colors also switch with theme
+       (see --map-line below) so everything stays legible either way. */
+    --instrument-bg: #05070A;
+    --instrument-bg-2: #0E1319;
+    --map-line: rgba(255,255,255,0.6);
+  }
+
+  [data-theme="light"] {
+    --bg: #F3F5F7;
+    --panel: #FFFFFF;
+    --panel-2: #EDF0F3;
+    --border: #D7DDE3;
+    --text: #1B222B;
+    --text-muted: #5B6675;
+    --text-faint: #8892A0;
+    --accent: #0E9C87;
+    --accent-dim: #D3F2EB;
+    --accent-warm: #B5651D;
+    --accent-warm-dim: #F6E3C9;
+    --danger: #C23A52;
+    --instrument-bg: #F7F8F9;
+    --instrument-bg-2: #EFF2F4;
+    --map-line: rgba(20,30,35,0.55);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+
+  #app {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel-2);
+    flex-wrap: wrap;
+  }
+
+  header h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  header h1 span {
+    color: var(--accent);
+  }
+
+  header h1 .variant-badge {
+    display: inline-block;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    color: #B98CE8;
+    background: rgba(185,140,232,0.14);
+    border: 1px solid rgba(185,140,232,0.35);
+    border-radius: 4px;
+    padding: 2px 7px;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    flex-wrap: wrap;
+    margin-left: auto;
+  }
+
+  .control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .control label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+
+  .control input[type="range"] {
+    width: 100px;
+    accent-color: var(--accent);
+  }
+
+  .control input[type="checkbox"] {
+    width: 15px;
+    height: 15px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .control input[type="number"] {
+    width: 64px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 4px 6px;
+    border-radius: 4px;
+  }
+
+  .control select {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 4px 6px;
+    border-radius: 4px;
+  }
+
+  .control .readout {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    min-width: 34px;
+  }
+
+  .control .readout-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-faint);
+  }
+
+  main {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    flex: 1;
+    min-height: 0;
+  }
+
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; }
+  }
+
+  .app-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--panel-2);
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  .saved-section {
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    padding: 18px 20px 24px;
+  }
+  .saved-section-head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 12px;
+  }
+  .saved-section-head h2 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin: 0;
+  }
+  .saved-count { font-size: 11px; color: var(--text-faint); }
+
+  .saved-view-toggle, .saved-export-buttons {
+    display: flex;
+    gap: 6px;
+    margin-left: auto;
+  }
+  .saved-export-buttons { margin-left: 0; }
+
+  .saved-section-divider {
+    width: 1px;
+    align-self: stretch;
+    background: var(--border);
+    margin: 0 4px;
+  }
+
+  .saved-view-btn {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 4px 9px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .saved-view-btn:hover { border-color: var(--accent); }
+  .saved-view-btn.is-current {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+
+  .saved-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .saved-table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .saved-table th, .saved-table td {
+    padding: 6px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .saved-table th {
+    background: var(--panel-2);
+    color: var(--text-muted);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+  }
+  .saved-table td { color: var(--text); }
+  .saved-table tr:last-child td { border-bottom: none; }
+  .saved-table tr:hover td { background: var(--panel); }
+
+  /* Shared hover tooltip for parameter controls. Rendered as a direct
+     child of <body> (not inside a panel) and positioned with JS via
+     getBoundingClientRect, specifically so it's never clipped by the
+     panels' own overflow-y: auto scroll boundary. */
+  .tooltip-popup {
+    position: fixed;
+    z-index: 1000;
+    display: none;
+    max-width: 260px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 12px;
+    line-height: 1.45;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    opacity: 0;
+    transform: translateY(2px);
+    transition: opacity 0.12s ease, transform 0.12s ease;
+    pointer-events: none;
+  }
+  .tooltip-popup.visible { opacity: 1; transform: translateY(0); }
+  .tooltip-popup::after {
+    content: '';
+    position: absolute;
+    left: var(--arrow-left, 12px);
+    width: 8px;
+    height: 8px;
+    background: var(--panel);
+    transform: translateX(-50%) rotate(45deg);
+  }
+  .tooltip-popup.arrow-above::after {
+    bottom: -5px;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+  .tooltip-popup.arrow-below::after {
+    top: -5px;
+    border-top: 1px solid var(--border);
+    border-left: 1px solid var(--border);
+  }
+
+  .panel {
+    background: var(--bg);
+    padding: 18px 20px 24px;
+    overflow-y: auto;
+  }
+
+  .panel-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .panel-head h2 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .upload-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .upload-btn {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 8px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+
+  .upload-btn:hover { border-color: var(--accent); }
+
+  .upload-status {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .upload-status.upload-status-warning {
+    color: var(--accent-warm);
+  }
+
+  input[type="file"] { display: none; }
+
+  .panel-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .audio-meta {
+    margin-top: 14px;
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .empty-state {
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--text-faint);
+    font-size: 13px;
+    cursor: help;
+  }
+
+  .channel-row {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+    margin-bottom: 8px;
+  }
+
+  .channel-label {
+    width: 56px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .channel-label .ref-tag {
+    margin-top: 3px;
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    user-select: none;
+    min-height: 12px;
+    min-width: 8px;
+  }
+
+  .channel-label .ref-tag.is-ref {
+    background: var(--accent-warm-dim);
+    color: var(--accent-warm);
+  }
+  .channel-label .ref-tag.is-active {
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+  .channel-label .ref-tag.is-off {
+    background: rgba(76,86,102,0.18);
+    color: var(--text-faint);
+    text-decoration: line-through;
+  }
+  .channel-label .ref-tag.is-candidate {
+    background: rgba(185,140,232,0.18);
+    color: #B98CE8;
+    cursor: default;
+  }
+  .channel-label .ref-tag.is-ref:hover,
+  .channel-label .ref-tag.is-active:hover,
+  .channel-label .ref-tag.is-off:hover {
+    filter: brightness(1.3);
+  }
+
+  .spectro-wrap {
+    position: relative;
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--instrument-bg);
+    height: 88px;
+  }
+
+  .spectro-wrap canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    cursor: crosshair;
+  }
+
+  .box-hint {
+    position: absolute;
+    top: 3px;
+    right: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+
+  .axis-label {
+    position: absolute;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: rgba(232,237,242,0.55);
+    background: rgba(5,7,10,0.5);
+    padding: 1px 4px;
+    border-radius: 3px;
+    pointer-events: none;
+    line-height: 1.3;
+  }
+  .axis-label.freq-max { top: 3px; left: 6px; }
+  .axis-label.time-start { bottom: 3px; left: 6px; }
+  .axis-label.time-end { bottom: 3px; right: 6px; }
+  .axis-label.map-nw { top: 6px; left: 6px; }
+  .axis-label.map-ne { top: 6px; right: 6px; }
+  .axis-label.map-sw { bottom: 6px; left: 6px; }
+  .axis-label.map-se { bottom: 6px; right: 6px; }
+
+  .map-zoom-controls {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    background: rgba(5,7,10,0.6);
+    border-radius: 7px;
+    padding: 3px;
+    z-index: 5;
+  }
+  .map-zoom-controls button {
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.08);
+    color: rgba(232,237,242,0.85);
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .map-zoom-controls button:hover { background: rgba(255,255,255,0.2); }
+  .map-zoom-controls button:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+  .map-zoom-controls button:disabled:hover { background: rgba(255,255,255,0.08); }
+  .map-zoom-controls .mono {
+    font-size: 10px;
+    color: rgba(232,237,242,0.7);
+    min-width: 30px;
+    text-align: center;
+  }
+
+  /* A custom-built (not native) scrollbar drives panning across a long
+     recording. Native scrollbars turned out unreliable here — invisible
+     entirely on some setups, visible only on hover/interaction on others
+     (macOS's default "overlay scrollbar" behavior) — so this is a plain
+     absolutely-positioned thumb, always rendered, with its own drag
+     handling. Its width is set (in JS) proportional to
+     windowLength/duration, so the zoom level stays visible at a glance,
+     same as the native-scrollbar version aimed for. */
+  .scrub-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 14px;
+  }
+  .scrub-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-faint);
+    white-space: nowrap;
+  }
+  .scrub-container {
+    position: relative;
+    flex: 1;
+    height: 16px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .scrub-thumb {
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    left: 0;
+    width: 100%;
+    background: var(--accent-dim);
+    border-radius: 4px;
+    cursor: grab;
+  }
+  .scrub-thumb:hover { background: var(--accent); }
+  .scrub-thumb.dragging { background: var(--accent); cursor: grabbing; }
+
+  #mapCanvasWrap {
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--instrument-bg-2);
+    aspect-ratio: 1 / 1;
+    max-height: 520px;
+  }
+
+  #mapCanvasWrap canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .map-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 30px;
+    color: var(--text-muted);
+    font-size: 13px;
+    cursor: help;
+  }
+
+  .legend {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 12px;
+    font-size: 11px;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+  }
+
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+
+  .legend-swatch {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+
+  .status-line {
+    margin-top: 16px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+
+  .status-line b { color: var(--text); font-weight: 500; }
+  .status-line .warm { color: var(--accent-warm); }
+  .status-line .cool { color: var(--accent); }
+  .status-gap { height: 10px; }
+
+  .clear-all {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-faint);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 4px 9px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .clear-all:hover { color: var(--danger); border-color: var(--danger); }
+
+  .save-localization-btn {
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: auto;
+  }
+  .save-localization-btn:hover:not(:disabled) { filter: brightness(1.2); }
+  .save-localization-btn:disabled {
+    background: none;
+    border-color: var(--border);
+    color: var(--text-faint);
+    cursor: not-allowed;
+  }
+
+  .theme-toggle {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1;
+    padding: 6px 9px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .theme-toggle:hover { border-color: var(--accent); }
+
+  .preset-buttons {
+    display: flex;
+    gap: 6px;
+  }
+  .preset-btn {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .preset-btn:hover {
+    border-color: var(--accent);
+    background: var(--panel-2);
+  }
+  .preset-btn.is-current {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <h1>TDoA <span>Localization</span> Explorer <span class="variant-badge">auto-suggest</span></h1>
+    <div class="controls">
+      <button class="theme-toggle" id="themeToggle" data-tooltip="Switch to light theme" aria-label="Toggle light/dark theme">🌙</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- LEFT: audio + spectrograms -->
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Audio</h2>
+      </div>
+      <div class="upload-row">
+        <label class="upload-btn" for="audioInput" data-tooltip="Upload a multichannel WAV file. Each channel becomes its own spectrogram, in the same channel order as your receiver list.">Upload WAV</label>
+        <input type="file" id="audioInput" accept=".wav,audio/wav,audio/x-wav">
+        <span class="upload-status" id="audioStatus">No file loaded</span>
+      </div>
+
+      <div class="panel-controls">
+        <div class="control" data-tooltip="Clips low-magnitude spectrogram content so quiet sound drops out and loud content stands out. Only affects the display, not the underlying data.">
+          <label for="contrastRange">Contrast</label>
+          <input type="range" id="contrastRange" min="0" max="95" step="1" value="35">
+          <span class="readout mono" id="contrastReadout">35</span>
+        </div>
+        <div class="control" data-tooltip="STFT window length for the spectrogram. Higher values give better frequency resolution at the cost of time resolution, and vice versa.">
+          <label for="nfftRange">NFFT</label>
+          <input type="range" id="nfftRange" min="6" max="12" step="1" value="9">
+          <span class="readout mono" id="nfftReadout">512</span>
+          <span class="readout-sub mono" id="nfftMsReadout"></span>
+        </div>
+        <div class="control" data-tooltip="How many seconds of the recording are shown at once. Zoom in near a call for finer arrival-time precision; use the scrollbar below to pan.">
+          <label>Window</label>
+          <div class="preset-buttons" id="windowPresets">
+            <button class="preset-btn window-btn" data-sec="15">15s</button>
+            <button class="preset-btn window-btn" data-sec="30">30s</button>
+            <button class="preset-btn window-btn" data-sec="60">60s</button>
+            <button class="preset-btn window-btn" id="windowFullBtn">Full</button>
+          </div>
+          <input type="number" id="windowCustomInput" min="0.1" step="0.5" placeholder="custom s" data-tooltip="Custom window length, in seconds.">
+        </div>
+        <div class="control" data-tooltip="Automatically searches other channels' feasible time windows for a match against the reference box, and proposes a candidate box there for you to accept or reject. Cross-Correlation is the default; GCC-PHAT (phase-only weighting) is the common literature default for TDOA and can help in reverberant/echoey environments, but in testing without reverberation, plain cross-correlation was consistently at least as good. None turns suggestions off.">
+          <label for="correlationModeSelect">Match</label>
+          <select id="correlationModeSelect">
+            <option value="none">None</option>
+            <option value="plain" selected>Cross-Correlation</option>
+            <option value="phat">GCC-PHAT</option>
+          </select>
+        </div>
+        <button class="clear-all" id="clearBoxesBtn" data-tooltip="Remove every arrival box across all channels. Can't be undone.">clear boxes</button>
+        <button class="clear-all" id="undoSaveBtn" disabled data-tooltip="Undo the most recently saved localization: removes it from the table and the spectrograms, and restores its boxes so you can fix and re-save.">Undo Save</button>
+        <button class="save-localization-btn" id="saveLocalizationBtn" disabled data-tooltip="Record the current localization (per-channel annotations + peak location/likelihood) as a row in the table below, archive these boxes permanently on the spectrograms, and clear the live boxes so the next call can be annotated.">Save Localization</button>
+      </div>
+
+      <div id="channelsContainer"></div>
+      <div class="scrub-wrap" id="scrubWrap" style="display: none;">
+        <span class="scrub-label mono">scroll ▸</span>
+        <div class="scrub-container" id="scrubContainer">
+          <div class="scrub-thumb" id="scrubThumb"></div>
+        </div>
+      </div>
+      <div class="empty-state" id="audioEmptyState" data-tooltip="Drag on a channel's spectrogram to mark an arrival — the box's center sets that channel's arrival time. Once geometry is loaded, drawing a box on one channel automatically searches the others' feasible time windows for a matching correlation peak and proposes a candidate box (dashed, violet, labeled with a confidence %) — click or drag it to accept, or click its × corner to dismiss it. Other channels also shade the time regions that are physically infeasible given the boxes already placed. Click a channel's REF/ON/OFF tag to temporarily exclude an accepted box without deleting it; double-click an accepted box to remove it. Use the Window control and the scrollbar below the spectrograms to navigate long recordings.">
+        Upload a multichannel WAV file to see per-channel spectrograms here 🔊
+      </div>
+      <div class="audio-meta mono" id="audioMetaLine"></div>
+    </section>
+
+    <!-- RIGHT: geometry + likelihood map -->
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Receiver Geometry</h2>
+      </div>
+      <div class="upload-row">
+        <label class="upload-btn" for="csvInput" data-tooltip="Upload receiver coordinates as a CSV, one row per channel in the same order as the audio channels (a header row is fine, it's detected and skipped). Lat/Lon mode expects lat,lon in degrees. Metric mode expects x,y in meters — east and north offsets from an arbitrary origin, same orientation the Lat/Lon mode projects into internally.">Upload CSV</label>
+        <input type="file" id="csvInput" accept=".csv,text/csv">
+        <div class="saved-view-toggle" id="csvModeToggle">
+          <button class="saved-view-btn is-current" id="csvModeLatLon" data-mode="latlon">Lat/Lon</button>
+          <button class="saved-view-btn" id="csvModeMetric" data-mode="metric">Metric (x,y)</button>
+        </div>
+        <span class="upload-status" id="csvStatus">No geometry loaded</span>
+      </div>
+
+      <div class="panel-controls">
+        <div class="control" data-tooltip="Quick-set both &sigma; and c for a typical environment. You can still fine-tune either afterward.">
+          <label>Preset</label>
+          <div class="preset-buttons">
+            <button class="preset-btn" id="presetAir" data-tooltip="Air: σ = 0.05 s, c = 343 m/s">🌳 Air</button>
+            <button class="preset-btn is-current" id="presetWater" data-tooltip="Water: σ = 1 s, c = 1480 m/s">🌊 Water</button>
+          </div>
+        </div>
+        <div class="control" data-tooltip="σ — timing uncertainty (SD) used in the Gaussian likelihood. Larger values tolerate more sync/measurement error, but widen the localization surface.">
+          <label for="sigmaRange">&sigma; (s)</label>
+          <input type="range" id="sigmaRange" min="-2" max="0.4771" step="0.005" value="0">
+          <span class="readout mono" id="sigmaReadout">1.00</span>
+        </div>
+        <div class="control" data-tooltip="Assumed constant speed of sound for the model. ~343 m/s in air, ~1450\u20131500 m/s underwater.">
+          <label for="speedInput">c (m/s)</label>
+          <input type="number" id="speedInput" value="1480" min="1" max="10000" step="1">
+        </div>
+        <div class="control" data-tooltip="Resolution of the likelihood grid. Higher values look sharper but are slower to compute, especially while dragging boxes.">
+          <label for="resSelect">Grid</label>
+          <select id="resSelect">
+            <option value="60">60&sup2;</option>
+            <option value="100" selected>100&sup2;</option>
+            <option value="160">160&sup2;</option>
+            <option value="220">220&sup2;</option>
+          </select>
+        </div>
+        <div class="control" data-tooltip="Chan-Ho (1994) closed-form TDoA estimate — a linear-algebra solution with no initial guess or iteration, shown as a blue crosshair. A genuine cross-check against the grid search's peak, not a refinement of it. Needs 4+ active channels.">
+          <label for="chanHoToggle">Chan-Ho</label>
+          <input type="checkbox" id="chanHoToggle">
+        </div>
+      </div>
+
+      <div id="mapCanvasWrap">
+        <canvas id="heatCanvas" width="600" height="600"></canvas>
+        <canvas id="markerCanvas" width="600" height="600"></canvas>
+        <div class="axis-label map-nw" id="mapBoundNW"></div>
+        <div class="axis-label map-ne" id="mapBoundNE"></div>
+        <div class="axis-label map-sw" id="mapBoundSW"></div>
+        <div class="axis-label map-se" id="mapBoundSE"></div>
+        <div class="map-zoom-controls">
+          <button id="mapZoomOut" data-tooltip="Zoom out">&minus;</button>
+          <span class="mono" id="mapZoomReadout">1.0&times;</span>
+          <button id="mapZoomIn" data-tooltip="Zoom in">+</button>
+        </div>
+        <div class="map-placeholder" id="mapPlaceholder" data-tooltip="Once geometry is loaded, draw an arrival box on two or more channels to see the TDoA likelihood surface here — the product of one Gaussian hyperbola per channel pair, peaking where they best agree.">
+          Upload receiver coordinates to see them on a map here 🗺️
+        </div>
+      </div>
+
+      <div class="legend">
+        <div class="legend-item"><span class="legend-swatch" style="background:var(--accent-warm); border:1px solid var(--accent-warm)"></span>reference receiver</div>
+        <div class="legend-item"><span class="legend-swatch" style="background:var(--accent); border:1px solid var(--accent)"></span>selected receiver</div>
+        <div class="legend-item"><span class="legend-swatch" style="border:1px solid var(--text-muted)"></span>unselected receiver</div>
+        <div class="legend-item"><span class="legend-swatch" style="border:1.5px dashed var(--text-muted)"></span>deactivated (click ON/REF tag)</div>
+        <div class="legend-item"><span style="display:inline-block; width:14px; height:0; border-top:1.5px dashed rgba(255,255,255,0.75);"></span>exact hyperbola per pair</div>
+        <div class="legend-item"><span style="display:inline-block; width:12px; height:12px; position:relative;"><span style="position:absolute; left:5px; top:0; width:2px; height:12px; background:#4FA8FF;"></span><span style="position:absolute; top:5px; left:0; height:2px; width:12px; background:#4FA8FF;"></span></span>Chan-Ho estimate</div>
+      </div>
+
+      <div class="status-line" id="statusLine">Waiting for audio and geometry.</div>
+    </section>
+  </main>
+
+  <section class="saved-section" id="savedLocalizationsSection" style="display: none;">
+    <div class="saved-section-head">
+      <h2>Saved Localizations</h2>
+      <span class="saved-count mono" id="savedLocalizationsCount"></span>
+      <div class="saved-view-toggle">
+        <button class="saved-view-btn is-current" id="savedViewWide" data-view="wide" data-tooltip="One row per localization; per-channel fields become column groups (blank if that channel wasn't boxed).">Wide</button>
+        <button class="saved-view-btn" id="savedViewTall" data-view="tall" data-tooltip="One row per individual annotation (Raven Selection Table style) — only channels that were actually boxed appear.">Tall (Raven)</button>
+      </div>
+      <div class="saved-section-divider"></div>
+      <div class="saved-export-buttons">
+        <button class="clear-all" id="exportAllBtn" data-tooltip="Downloads both files: a wide-view .csv and a tall-view (Raven Selection Table style) .txt.">Export (CSV + Raven TXT)</button>
+      </div>
+    </div>
+    <div class="saved-table-wrap" id="savedLocalizationsTableWrap"></div>
+  </section>
+
+  <footer class="app-footer">
+    Designed by Irina Tolkova, implemented with Claude Sonnet 5, inspired by conversations across the Yang Center.
+  </footer>
+</div>
+
+<div class="tooltip-popup" id="tooltipPopup"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------------------------------------------------------------------
+  // Global state
+  // ---------------------------------------------------------------------
+  const state = {
+    audioBuffer: null,
+    audioFileName: null,      // -> used to suffix exported filenames
+    numChannels: 0,
+    duration: 0,
+    sampleRate: 0,
+    nativeSampleRate: null,   // the WAV file's own declared rate, if parsed
+    channelCanvases: [],      // {canvas, offscreen, ctx, wrap, spec}
+    boxes: {},                // channelIndex -> {timeStart, timeEnd, centerTime, active} (seconds)
+    boxOrder: [],             // channel indices in the order boxes were created (first = reference)
+    receivers: [],            // [{lat, lon, x, y}]  x,y = local ENU meters
+    distanceGrids: [],        // Float32Array per receiver, length gridW*gridH
+    gridW: 100,
+    gridH: 100,
+    gridBounds: null,         // {minX, maxX, minY, maxY}
+    projOriginLat: null,      // equirectangular projection origin (mean receiver lat/lon)
+    projOriginLon: null,
+    mapZoom: 1,                // 1 = fully zoomed out (the auto-fit extent)
+    mapPanX: 0,                // pan offset, in internal canvas-pixel units (600x600 space)
+    mapPanY: 0,
+    mapRasterImage: null,      // cached offscreen likelihood-surface bitmap — recomputed only
+                               // when boxes/sigma/c/grid-resolution change, not on pan/zoom
+    mapPairDiffFields: [],     // cached per-pair TDoA fields, for redrawing hyperbolas cheaply
+    sigma: 1,
+    soundSpeed: 1480,
+    nfft: 512,                // STFT window length (power of two)
+    contrast: 35,             // 0-95, clips low-magnitude spectrogram content
+    viewStart: 0,             // seconds — left edge of the visible spectrogram window
+    windowLength: 0,          // seconds — 0 or >= duration means "show the whole file"
+    autoSuggest: true,        // whether candidate boxes are generated automatically
+    correlationMode: 'plain', // 'plain' or 'phat' — see the note near correlateSegments()
+    rejectedChannels: new Set(), // channels whose candidate was explicitly dismissed —
+                               // won't be re-suggested until boxes are cleared
+    mapProductGrid: null,      // cached raw likelihood product grid (Float32Array, gridW*gridH) —
+                               // reused by the spatial-uncertainty calc at save time, not recomputed
+    lastPeakLatLon: null,      // {lat, lon} of the current peak, cached alongside the grid
+    lastPeakLikelihood: 0,
+    // Single canonical store — one entry per Save click. Both the wide
+    // and tall (Raven-style) table views, and both exports, are derived
+    // from this at render/export time, so there's one source of truth.
+    // Each entry: { localizationIndex, refCh, savedAt, peakLat, peakLon,
+    // peakLikelihood, uncertaintyM, sigma, soundSpeed, gridResolution,
+    // channels: [ {channel, hasBox, selection, beginTime, endTime,
+    // duration, lowFreq, highFreq, included}, ... one per channel 0..N-1 ] }
+    savedLocalizations: [],
+    // Archived boxes from past saves, kept purely for display — one array
+    // per channel. The live/editable state.boxes[ch] is untouched by this;
+    // Save now archives-and-clears rather than locking boxes in place.
+    lockedBoxes: {},
+    nextLocalizationId: 1,     // -> "Localization Index", increments once per Save
+    nextSelectionId: 1,        // -> "Selection", increments once per individual annotation row
+    savedTableView: 'wide',    // 'wide' or 'tall' — which view is currently shown
+    chanHoEnabled: false,      // off by default — an opt-in alternative location estimate
+    chanHoResult: null,        // {x, y} in world meters (local ENU), or null if not computable/shown
+    chanHoRmsMs: null,         // RMS TDoA residual at the estimate, in ms — the fit-quality readout
+    csvInputMode: 'latlon',    // 'latlon' or 'metric' — which CSV format the upload button expects
+    lastPeakXY: null,          // {x, y} in local ENU meters — cached alongside lastPeakLatLon so
+                               // exports/display have raw meters available even without a geographic origin
+  };
+
+  // ---------------------------------------------------------------------
+  // Small helpers
+  // ---------------------------------------------------------------------
+  const $ = (id) => document.getElementById(id);
+
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+  // ---------------------------------------------------------------------
+  // FFT (iterative radix-2 Cooley-Tukey). Length must be a power of two.
+  // ---------------------------------------------------------------------
+  function fftInPlace(re, im) {
+    const n = re.length;
+    if (n <= 1) return;
+    for (let i = 1, j = 0; i < n; i++) {
+      let bit = n >> 1;
+      for (; j & bit; bit >>= 1) j ^= bit;
+      j ^= bit;
+      if (i < j) {
+        let t = re[i]; re[i] = re[j]; re[j] = t;
+        t = im[i]; im[i] = im[j]; im[j] = t;
+      }
+    }
+    for (let len = 2; len <= n; len <<= 1) {
+      const ang = (-2 * Math.PI) / len;
+      const wr = Math.cos(ang), wi = Math.sin(ang);
+      for (let i = 0; i < n; i += len) {
+        let curWr = 1, curWi = 0;
+        for (let k = 0; k < len / 2; k++) {
+          const ur = re[i + k], ui = im[i + k];
+          const vr = re[i + k + len / 2] * curWr - im[i + k + len / 2] * curWi;
+          const vi = re[i + k + len / 2] * curWi + im[i + k + len / 2] * curWr;
+          re[i + k] = ur + vr; im[i + k] = ui + vi;
+          re[i + k + len / 2] = ur - vr; im[i + k + len / 2] = ui - vi;
+          const nwr = curWr * wr - curWi * wi;
+          const nwi = curWr * wi + curWi * wr;
+          curWr = nwr; curWi = nwi;
+        }
+      }
+    }
+  }
+
+  // Inverse FFT via the standard conjugate trick — reuses fftInPlace
+  // rather than duplicating the butterfly logic: IFFT(X) = (1/N) *
+  // conj(FFT(conj(X))).
+  function ifftInPlace(re, im) {
+    const n = re.length;
+    for (let i = 0; i < n; i++) im[i] = -im[i];
+    fftInPlace(re, im);
+    for (let i = 0; i < n; i++) { re[i] = re[i] / n; im[i] = -im[i] / n; }
+  }
+
+  function nextPow2(n) {
+    let p = 1;
+    while (p < n) p *= 2;
+    return p;
+  }
+
+  // Cross-correlates a short reference clip `a` against a longer search
+  // segment `b` (both real-valued sample arrays at the same sample rate),
+  // via FFT. Returns a Float64Array of length (b.length - a.length + 1):
+  // corr[k] is the correlation score when `a` is aligned starting at
+  // sample k of `b` ("valid" mode — a fully inside b, no wraparound
+  // contamination, since both are zero-padded to N >= La+Lb-1 first).
+  //
+  // mode 'plain': straightforward cross-correlation, sum_n a[n]*b[n+k].
+  // mode 'phat': GCC-PHAT — the cross-power spectrum is phase-normalized
+  // (divided by its own magnitude) before the inverse transform, which
+  // sharpens the peak and discards amplitude information. This is the
+  // standard choice for TDOA in the literature, primarily because it
+  // suppresses multipath/reverberation-smeared peaks — but in testing
+  // against plain correlation under additive noise and gain mismatch
+  // alone (no reverberation), plain correlation was consistently at
+  // least as good and sometimes clearly better, since PHAT's blanket
+  // whitening also amplifies noise-only frequency bins with no signal in
+  // them. Both are offered; 'plain' is the default for that reason.
+  //
+  // sampleRate/freqLow/freqHigh (all optional): if given, the cross-power
+  // spectrum's bins outside [freqLow, freqHigh] are zeroed before the
+  // inverse transform — equivalent to bandpass-filtering both signals
+  // before correlating, since zeroing either factor of a product zeroes
+  // the product regardless of which side. Bin i and its mirror bin N-i
+  // (the +freq/-freq pair for a real signal) are masked together, so this
+  // behaves like a real bandpass rather than an arbitrary asymmetric mask.
+  function correlateSegments(a, b, mode, sampleRate, freqLow, freqHigh) {
+    const La = a.length, Lb = b.length;
+    const N = nextPow2(La + Lb - 1);
+    const reA = new Float64Array(N), imA = new Float64Array(N);
+    const reB = new Float64Array(N), imB = new Float64Array(N);
+    reA.set(a);
+    reB.set(b);
+    fftInPlace(reA, imA);
+    fftInPlace(reB, imB);
+
+    const hasMask = sampleRate > 0 && freqLow != null && freqHigh != null && freqHigh > freqLow;
+    const binHz = sampleRate / N;
+
+    const reC = new Float64Array(N), imC = new Float64Array(N);
+    for (let i = 0; i < N; i++) {
+      if (hasMask) {
+        const freq = (i <= N / 2 ? i : N - i) * binHz;
+        if (freq < freqLow || freq > freqHigh) continue; // reC[i]/imC[i] stay 0
+      }
+      // conj(FFT(a)) * FFT(b)
+      let cr = reA[i] * reB[i] + imA[i] * imB[i];
+      let ci = reA[i] * imB[i] - imA[i] * reB[i];
+      if (mode === 'phat') {
+        const mag = Math.sqrt(cr * cr + ci * ci) + 1e-12;
+        cr /= mag;
+        ci /= mag;
+      }
+      reC[i] = cr;
+      imC[i] = ci;
+    }
+    ifftInPlace(reC, imC);
+
+    const numValid = Lb - La + 1;
+    const out = new Float64Array(numValid);
+    for (let k = 0; k < numValid; k++) out[k] = reC[k];
+    return out;
+  }
+
+  const hannWindowCache = {};
+  function hannWindow(n) {
+    if (hannWindowCache[n]) return hannWindowCache[n];
+    const w = new Float32Array(n);
+    for (let i = 0; i < n; i++) w[i] = 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / (n - 1));
+    hannWindowCache[n] = w;
+    return w;
+  }
+
+  // Compute a log-magnitude spectrogram for one channel of samples at a
+  // given STFT window length (must be a power of two; hop is nfft/4 by
+  // default, adjusted in either direction — see MAX/MIN_SPECTROGRAM_FRAMES
+  // below).
+  // `sampleRate` is the rate the samples are actually at (post-decode).
+  // `maxFreqHz`, if given, crops the output to bins at or below that
+  // frequency — used so a file that got resampled up (e.g. a 2 kHz
+  // recording decoded at 48 kHz) doesn't waste the display on the upper
+  // range that's just silence/filter rolloff above its real Nyquist.
+  // Returns {data: Float32Array(numFrames*numBins), numFrames, numBins}
+  //
+  // The offscreen spectrogram bitmap is exactly numFrames pixels wide.
+  // Frame count is roughly 4 x samples.length / nfft (since hop = nfft/4
+  // by default), which depends only on sample *count*, not sample *rate*
+  // — so the same NFFT setting that looks fine at 44.1kHz can produce far
+  // too few frames at sub-kHz sample rates (NFFT=512 is 12ms at 44.1kHz
+  // but 2.56s at 200Hz, so the default 75%-overlap hop is also 2.56s —
+  // a 20s clip then has only ~40 STFT frames stretched across a 900px
+  // canvas, rendering as visibly blocky/grainy rectangles rather than a
+  // smooth image). MIN_SPECTROGRAM_FRAMES below corrects that by
+  // increasing overlap (shrinking hop) when needed, symmetric to how
+  // MAX_SPECTROGRAM_FRAMES already reduces overlap for the opposite
+  // (too many frames / oversized canvas) problem.
+  const MAX_SPECTROGRAM_FRAMES = 12000;
+  const MIN_SPECTROGRAM_FRAMES = 3000;
+  function computeSpectrogram(samples, nfft, sampleRate, maxFreqHz) {
+    const naiveHop = Math.max(1, Math.floor(nfft / 4));
+    const naiveFrames = Math.max(1, Math.floor((samples.length - nfft) / naiveHop) + 1);
+    let hop;
+    if (naiveFrames > MAX_SPECTROGRAM_FRAMES) {
+      hop = Math.max(naiveHop, Math.ceil(samples.length / MAX_SPECTROGRAM_FRAMES));
+    } else if (naiveFrames < MIN_SPECTROGRAM_FRAMES) {
+      hop = Math.max(1, Math.floor((samples.length - nfft) / (MIN_SPECTROGRAM_FRAMES - 1)));
+    } else {
+      hop = naiveHop;
+    }
+    const hann = hannWindow(nfft);
+    const fullNumBins = nfft / 2;
+    const hzPerBin = sampleRate / nfft;
+    const numBins = maxFreqHz
+      ? clamp(Math.ceil(maxFreqHz / hzPerBin) + 1, 1, fullNumBins)
+      : fullNumBins;
+    const numFrames = Math.max(1, Math.floor((samples.length - nfft) / hop) + 1);
+    const data = new Float32Array(numFrames * numBins);
+    const re = new Float32Array(nfft);
+    const im = new Float32Array(nfft);
+    let maxDb = -Infinity, minDb = Infinity;
+
+    for (let f = 0; f < numFrames; f++) {
+      const start = f * hop;
+      for (let i = 0; i < nfft; i++) {
+        const s = start + i < samples.length ? samples[start + i] : 0;
+        re[i] = s * hann[i];
+        im[i] = 0;
+      }
+      fftInPlace(re, im);
+      // Only the retained bins (0..numBins-1) are computed into `data` —
+      // the higher bins beyond maxFreqHz are simply never stored.
+      for (let b = 0; b < numBins; b++) {
+        const mag = Math.sqrt(re[b] * re[b] + im[b] * im[b]);
+        const db = 20 * Math.log10(mag + 1e-6);
+        data[f * numBins + b] = db;
+        if (db > maxDb) maxDb = db;
+        if (db < minDb) minDb = db;
+      }
+    }
+    return { data, numFrames, numBins, minDb, maxDb, maxFreqDisplayed: numBins * hzPerBin, hop };
+  }
+
+  // The frequency cap to pass to computeSpectrogram: null (no cropping)
+  // unless the file's own sample rate is lower than what it got decoded
+  // at, in which case cap at its true Nyquist.
+  function nyquistCropHz() {
+    if (state.nativeSampleRate && state.nativeSampleRate < state.sampleRate) {
+      return state.nativeSampleRate / 2;
+    }
+    return null;
+  }
+
+  function isLightTheme() {
+    return document.documentElement.getAttribute('data-theme') === 'light';
+  }
+
+  function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  // Dark mode: near-black -> steel blue -> pale cyan (low amplitude reads
+  // as background-dark, loud content stands out bright).
+  const SPECTROGRAM_STOPS_DARK = [
+    [5, 7, 10],
+    [22, 40, 58],
+    [45, 92, 120],
+    [100, 190, 190],
+    [214, 245, 235],
+  ];
+  // Light mode: the same ramp with lightness inverted — near-white (low
+  // amplitude, reads as background) down to a dark teal (loud content
+  // stands out dark against the page), same hue family as dark mode's.
+  const SPECTROGRAM_STOPS_LIGHT = [
+    [250, 251, 252],
+    [198, 222, 226],
+    [120, 175, 178],
+    [45, 100, 105],
+    [8, 28, 32],
+  ];
+
+  // contrast in [0, 95]: clips that fraction of the low end of the dB
+  // range before mapping to color, so quiet content drops out and loud
+  // content gets more of the ramp — the usual spectrogram "contrast" knob.
+  function dbToColor(db, minDb, maxDb, contrast) {
+    const range = Math.max(1e-6, maxDb - minDb);
+    const effectiveMinDb = minDb + range * (contrast / 100) * 0.85;
+    const t = clamp((db - effectiveMinDb) / Math.max(1e-6, maxDb - effectiveMinDb), 0, 1);
+    const stops = isLightTheme() ? SPECTROGRAM_STOPS_LIGHT : SPECTROGRAM_STOPS_DARK;
+    const scaled = t * (stops.length - 1);
+    const i = Math.min(stops.length - 2, Math.floor(scaled));
+    const frac = scaled - i;
+    const a = stops[i], b = stops[i + 1];
+    return [
+      Math.round(a[0] + (b[0] - a[0]) * frac),
+      Math.round(a[1] + (b[1] - a[1]) * frac),
+      Math.round(a[2] + (b[2] - a[2]) * frac),
+    ];
+  }
+
+  function renderSpectrogramToOffscreen(spec, contrast) {
+    const { data, numFrames, numBins, minDb, maxDb } = spec;
+    const off = document.createElement('canvas');
+    off.width = numFrames;
+    off.height = numBins;
+    const ctx = off.getContext('2d');
+    const img = ctx.createImageData(numFrames, numBins);
+    for (let f = 0; f < numFrames; f++) {
+      for (let b = 0; b < numBins; b++) {
+        const db = data[f * numBins + b];
+        const [r, g, bl] = dbToColor(db, minDb, maxDb, contrast);
+        // flip vertically so low frequencies are at the bottom
+        const row = numBins - 1 - b;
+        const idx = (row * numFrames + f) * 4;
+        img.data[idx] = r; img.data[idx + 1] = g; img.data[idx + 2] = bl; img.data[idx + 3] = 255;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    return off;
+  }
+
+  // ---------------------------------------------------------------------
+  // Audio loading
+  // ---------------------------------------------------------------------
+
+  // A plain `new AudioContext()` defaults to the output device's hardware
+  // rate (commonly 44100 or 48000 Hz), and decodeAudioData silently
+  // resamples to that rate. For low-rate recordings (hydrophones are often
+  // 8-24 kHz) that wastes CPU and pads the spectrogram with empty
+  // high-frequency bins above the file's real Nyquist. So: read the WAV
+  // header ourselves to find the native sample rate, then decode into an
+  // OfflineAudioContext already set to that rate, which decodeAudioData
+  // will not resample away from.
+  function parseWavSampleRate(arrayBuffer) {
+    const view = new DataView(arrayBuffer);
+    if (view.getUint32(0, false) !== 0x52494646) throw new Error('not RIFF'); // "RIFF"
+    if (view.getUint32(8, false) !== 0x57415645) throw new Error('not WAVE'); // "WAVE"
+    let pos = 12;
+    while (pos + 8 <= view.byteLength) {
+      const chunkId = view.getUint32(pos, false);
+      const chunkSize = view.getUint32(pos + 4, true);
+      if (chunkId === 0x666d7420) { // "fmt "
+        return view.getUint32(pos + 8 + 4, true); // sampleRate field within fmt chunk
+      }
+      pos += 8 + chunkSize + (chunkSize % 2); // chunks are word-aligned
+    }
+    throw new Error('no fmt chunk found');
+  }
+
+  // A full manual WAV/PCM parser, used as a last-resort fallback when the
+  // browser's own decodeAudioData rejects the file. That happens for very
+  // low sample rates (e.g. 2 kHz) — turns out the restriction isn't just
+  // on OfflineAudioContext/AudioContext construction, it's on AudioBuffer
+  // itself (an intermediate buffer at the source rate gets created during
+  // decode regardless of which context calls it), so no combination of
+  // Web Audio contexts can decode such a file. This reads the raw PCM
+  // samples directly out of the file bytes instead, with no rate
+  // restriction of any kind, and returns an object exposing the same
+  // subset of the AudioBuffer interface the rest of the app uses.
+  function parseWavPCM(arrayBuffer) {
+    const view = new DataView(arrayBuffer);
+    if (view.getUint32(0, false) !== 0x52494646) throw new Error('not a RIFF file');
+    if (view.getUint32(8, false) !== 0x57415645) throw new Error('not a WAVE file');
+
+    let pos = 12;
+    let fmt = null;
+    let dataOffset = null, dataLength = null;
+
+    while (pos + 8 <= view.byteLength && (!fmt || dataOffset === null)) {
+      const chunkId = view.getUint32(pos, false);
+      const chunkSize = view.getUint32(pos + 4, true);
+      const chunkDataStart = pos + 8;
+
+      if (chunkId === 0x666d7420) { // "fmt "
+        let audioFormat = view.getUint16(chunkDataStart, true);
+        const numChannels = view.getUint16(chunkDataStart + 2, true);
+        const sampleRate = view.getUint32(chunkDataStart + 4, true);
+        const bitsPerSample = view.getUint16(chunkDataStart + 14, true);
+        // WAVE_FORMAT_EXTENSIBLE (0xFFFE) — common for >2 channel files —
+        // carries the real format code in the first two bytes of the
+        // 16-byte SubFormat GUID, 24 bytes into the fmt chunk's data.
+        if (audioFormat === 0xfffe && chunkSize >= 40) {
+          audioFormat = view.getUint16(chunkDataStart + 24, true);
+        }
+        fmt = { audioFormat, numChannels, sampleRate, bitsPerSample };
+      } else if (chunkId === 0x64617461) { // "data"
+        dataOffset = chunkDataStart;
+        dataLength = chunkSize;
+      }
+      pos = chunkDataStart + chunkSize + (chunkSize % 2);
+    }
+
+    if (!fmt) throw new Error('no fmt chunk found');
+    if (dataOffset === null) throw new Error('no data chunk found');
+
+    // Some writers leave a placeholder/streaming data size; never read
+    // past the actual file.
+    const safeDataLength = Math.min(dataLength, view.byteLength - dataOffset);
+    const bytesPerSample = fmt.bitsPerSample / 8;
+    const frameSize = bytesPerSample * fmt.numChannels;
+    if (frameSize <= 0) throw new Error('invalid fmt chunk (0 channels or 0 bit depth)');
+    const numFrames = Math.floor(safeDataLength / frameSize);
+
+    let readSample;
+    if (fmt.audioFormat === 1) { // integer PCM
+      if (fmt.bitsPerSample === 8) {
+        readSample = (o) => (view.getUint8(o) - 128) / 128; // 8-bit WAV PCM is unsigned
+      } else if (fmt.bitsPerSample === 16) {
+        readSample = (o) => view.getInt16(o, true) / 32768;
+      } else if (fmt.bitsPerSample === 24) {
+        readSample = (o) => {
+          let v = view.getUint8(o) | (view.getUint8(o + 1) << 8) | (view.getUint8(o + 2) << 16);
+          if (v & 0x800000) v -= 0x1000000;
+          return v / 8388608;
+        };
+      } else if (fmt.bitsPerSample === 32) {
+        readSample = (o) => view.getInt32(o, true) / 2147483648;
+      } else {
+        throw new Error('unsupported PCM bit depth: ' + fmt.bitsPerSample);
+      }
+    } else if (fmt.audioFormat === 3) { // IEEE float
+      if (fmt.bitsPerSample === 32) readSample = (o) => view.getFloat32(o, true);
+      else if (fmt.bitsPerSample === 64) readSample = (o) => view.getFloat64(o, true);
+      else throw new Error('unsupported float bit depth: ' + fmt.bitsPerSample);
+    } else {
+      throw new Error('unsupported WAV format code: ' + fmt.audioFormat);
+    }
+
+    const channels = [];
+    for (let c = 0; c < fmt.numChannels; c++) channels.push(new Float32Array(numFrames));
+    for (let f = 0; f < numFrames; f++) {
+      const frameOffset = dataOffset + f * frameSize;
+      for (let c = 0; c < fmt.numChannels; c++) {
+        channels[c][f] = readSample(frameOffset + c * bytesPerSample);
+      }
+    }
+
+    return {
+      numberOfChannels: fmt.numChannels,
+      sampleRate: fmt.sampleRate,
+      duration: numFrames / fmt.sampleRate,
+      length: numFrames,
+      getChannelData: (ch) => channels[ch],
+    };
+  }
+
+  $('audioInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) loadAudioFile(file);
+  });
+
+  async function loadAudioFile(file) {
+    $('audioStatus').textContent = 'Decoding ' + file.name + '...';
+
+    const arrayBuffer = await file.arrayBuffer();
+    let nativeSampleRate = null;
+    try {
+      nativeSampleRate = parseWavSampleRate(arrayBuffer);
+    } catch (err) {
+      nativeSampleRate = null; // fall back to default decoding below
+    }
+
+    let audioBuffer = null;
+    let usedNativeRate = false;
+    let usedManualParser = false;
+
+    // Try decoding at the file's own sample rate first, to avoid
+    // needless resampling. This can fail even for a perfectly valid WAV:
+    // browsers enforce a minimum context sample rate (commonly ~3000 Hz),
+    // so very low-rate recordings (e.g. 2 kHz hydrophone data) get
+    // rejected by the OfflineAudioContext constructor itself. In that
+    // case, fall through to a standard AudioContext, which decodes fine
+    // and just resamples up to its (much higher) hardware rate.
+    if (nativeSampleRate) {
+      try {
+        const OfflineCtx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+        const offlineCtx = new OfflineCtx(1, 1, nativeSampleRate);
+        audioBuffer = await offlineCtx.decodeAudioData(arrayBuffer.slice(0));
+        usedNativeRate = true;
+      } catch (err) {
+        audioBuffer = null;
+      }
+    }
+
+    if (!audioBuffer) {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const actx = new AudioCtx();
+        audioBuffer = await actx.decodeAudioData(arrayBuffer.slice(0));
+      } catch (err) {
+        audioBuffer = null;
+      }
+    }
+
+    // Last resort: some browsers reject decodeAudioData for very low
+    // sample rates no matter which context calls it (the restriction
+    // turns out to live on AudioBuffer itself, not the context), so
+    // parse the PCM samples out of the file by hand instead.
+    if (!audioBuffer) {
+      try {
+        audioBuffer = parseWavPCM(arrayBuffer);
+        usedManualParser = true;
+      } catch (err) {
+        $('audioStatus').textContent = 'Could not decode file: ' + err.message;
+        return;
+      }
+    }
+
+    state.audioBuffer = audioBuffer;
+    state.numChannels = audioBuffer.numberOfChannels;
+    state.duration = audioBuffer.duration;
+    state.sampleRate = audioBuffer.sampleRate;
+    state.nativeSampleRate = nativeSampleRate;
+    state.boxes = {};
+    state.boxOrder = [];
+    state.rejectedChannels.clear();
+
+    let rateNote = '';
+    if (usedManualParser) {
+      rateNote = ' (parsed directly — the browser\'s audio decoder would not accept this sample rate at all)';
+    } else if (usedNativeRate) {
+      rateNote = ' (native, not resampled)';
+    } else if (nativeSampleRate) {
+      rateNote = ' (resampled from ' + nativeSampleRate + ' Hz — the browser would not run an audio context at that rate directly; spectrograms are cropped back to the ' + (nativeSampleRate / 2) + ' Hz native Nyquist)';
+    }
+
+    state.audioFileName = file.name;
+    $('audioStatus').textContent = file.name;
+
+    let metaText = state.numChannels + ' ch, ' + state.sampleRate + ' Hz' + rateNote + ', ' + state.duration.toFixed(2) + ' s';
+    if (state.numChannels < 2) {
+      metaText += ' — only 1 channel decoded; TDoA needs 2+. Check the file is a true multichannel WAV, not stereo-downmixed.';
+    }
+    $('audioMetaLine').textContent = metaText;
+
+    // Default to a 10s window (matching one of the two example lengths),
+    // or the whole file if it's shorter than that.
+    state.windowLength = state.duration > 10 ? 10 : state.duration;
+    state.viewStart = 0;
+
+    setDefaultNfftForSampleRate(state.sampleRate);
+
+    buildChannelRows();
+    syncScrubbar();
+    highlightCurrentWindowPreset();
+    updateStatusLine();
+    computeAndRenderLikelihood();
+  }
+
+  function formatFreq(hz) {
+    if (hz >= 10000) return (hz / 1000).toFixed(0) + ' kHz';
+    if (hz >= 1000) return (hz / 1000).toFixed(1) + ' kHz';
+    return Math.round(hz) + ' Hz';
+  }
+
+  // The currently visible time window, in seconds. windowLength <= 0 (or
+  // >= the file's duration) means "show the whole file" — used both as
+  // the initial state and as what a long recording degrades to safely.
+  function currentView() {
+    const dur = state.duration || 0;
+    const win = (state.windowLength > 0 && state.windowLength < dur) ? state.windowLength : dur;
+    const start = clamp(state.viewStart || 0, 0, Math.max(0, dur - win));
+    return { start, end: Math.min(dur, start + win), length: win };
+  }
+
+  function pixelToTime(px, canvasWidth) {
+    const view = currentView();
+    if (view.length <= 0) return 0;
+    return view.start + (px / canvasWidth) * view.length;
+  }
+
+  function timeToPixel(t, canvasWidth) {
+    const view = currentView();
+    if (view.length <= 0) return 0;
+    return ((t - view.start) / view.length) * canvasWidth;
+  }
+
+  // Frequency axis isn't pannable/zoomable — it always spans [0, maxFreq]
+  // across the full canvas height, matching the spectrogram's own row
+  // layout (canvas top = maxFreq, bottom = 0Hz).
+  function pixelToFreq(py, canvasHeight, maxFreq) {
+    if (!(maxFreq > 0)) return 0;
+    return (1 - py / canvasHeight) * maxFreq;
+  }
+
+  function freqToPixel(freq, canvasHeight, maxFreq) {
+    if (!(maxFreq > 0)) return 0;
+    return (1 - freq / maxFreq) * canvasHeight;
+  }
+
+  function updateAxisLabels(entry) {
+    if (entry.freqLabelEl && entry.spec) {
+      entry.freqLabelEl.textContent = '0–' + formatFreq(entry.spec.maxFreqDisplayed);
+    }
+    const view = currentView();
+    if (entry.timeStartLabelEl) entry.timeStartLabelEl.textContent = view.start.toFixed(2) + ' s';
+    if (entry.timeEndLabelEl) entry.timeEndLabelEl.textContent = view.end.toFixed(2) + ' s';
+  }
+
+  function buildChannelRows() {
+    $('audioEmptyState').style.display = 'none';
+    $('scrubWrap').style.display = 'flex';
+    const container = $('channelsContainer');
+    container.innerHTML = '';
+    state.channelCanvases = [];
+
+    for (let ch = 0; ch < state.numChannels; ch++) {
+      const row = document.createElement('div');
+      row.className = 'channel-row';
+
+      const label = document.createElement('div');
+      label.className = 'channel-label';
+      label.innerHTML = '<span class="mono">CH ' + (ch + 1) + '</span><span class="ref-tag" id="refTag' + ch + '"></span>';
+      label.querySelector('.ref-tag').addEventListener('click', () => toggleBoxActive(ch));
+
+      const wrap = document.createElement('div');
+      wrap.className = 'spectro-wrap';
+      const canvas = document.createElement('canvas');
+      canvas.width = 900;
+      canvas.height = 160;
+      wrap.appendChild(canvas);
+
+      const hint = document.createElement('div');
+      hint.className = 'box-hint';
+      hint.textContent = 'drag to mark arrival';
+      wrap.appendChild(hint);
+
+      // Lightweight corner labels showing the overall time/frequency
+      // bounds — timespan in particular matters a lot for localization,
+      // since box-drag precision is fixed pixels-per-second.
+      const freqLabelEl = document.createElement('div');
+      freqLabelEl.className = 'axis-label freq-max mono';
+      wrap.appendChild(freqLabelEl);
+
+      const timeStartLabelEl = document.createElement('div');
+      timeStartLabelEl.className = 'axis-label time-start mono';
+      timeStartLabelEl.textContent = '0.00 s';
+      wrap.appendChild(timeStartLabelEl);
+
+      const timeEndLabelEl = document.createElement('div');
+      timeEndLabelEl.className = 'axis-label time-end mono';
+      wrap.appendChild(timeEndLabelEl);
+
+      row.appendChild(label);
+      row.appendChild(wrap);
+      container.appendChild(row);
+
+      const samples = state.audioBuffer.getChannelData(ch);
+      const spec = computeSpectrogram(samples, state.nfft, state.sampleRate, nyquistCropHz());
+      const offscreen = renderSpectrogramToOffscreen(spec, state.contrast);
+
+      const entry = { canvas, ctx: canvas.getContext('2d'), offscreen, wrap, ch, spec, freqLabelEl, timeStartLabelEl, timeEndLabelEl };
+      state.channelCanvases.push(entry);
+      updateAxisLabels(entry);
+      drawChannelCanvas(entry);
+      attachBoxInteraction(entry);
+    }
+  }
+
+  // NFFT changed: the STFT itself must be recomputed per channel.
+  function recomputeSpectrograms() {
+    if (!state.audioBuffer) return;
+    state.channelCanvases.forEach((entry) => {
+      const samples = state.audioBuffer.getChannelData(entry.ch);
+      entry.spec = computeSpectrogram(samples, state.nfft, state.sampleRate, nyquistCropHz());
+      entry.offscreen = renderSpectrogramToOffscreen(entry.spec, state.contrast);
+      updateAxisLabels(entry);
+      drawChannelCanvas(entry);
+    });
+  }
+
+  // Contrast changed: just recolor the already-computed spectrogram data
+  // (cheap — no FFT work needed).
+  function recolorSpectrograms() {
+    state.channelCanvases.forEach((entry) => {
+      if (!entry.spec) return;
+      entry.offscreen = renderSpectrogramToOffscreen(entry.spec, state.contrast);
+      drawChannelCanvas(entry);
+    });
+  }
+
+  // Rotating palette for archived (locked) boxes from past saves, keyed by
+  // Localization Index — lets the same call's boxes read as visually
+  // related across channels. Chosen to be distinct from the "live" state
+  // colors used elsewhere (amber REF, teal ON, violet candidate, red
+  // inconsistency-flag) and muted, since these represent settled history
+  // rather than the current focus.
+  const LOCKED_PALETTE = ['#6C9BD1', '#D18AA0', '#D1B26C', '#8FBF8F', '#C98B5B', '#7EC8C8'];
+  function lockedColorFor(localizationIndex) {
+    const idx = ((localizationIndex - 1) % LOCKED_PALETTE.length + LOCKED_PALETTE.length) % LOCKED_PALETTE.length;
+    return LOCKED_PALETTE[idx];
+  }
+
+  function drawChannelCanvas(entry) {
+    const { canvas, ctx, offscreen, ch, spec } = entry;
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Crop-blit: only the currently visible time window is sourced out of
+    // the (precomputed, full-file-width) offscreen bitmap. This is a
+    // cheap operation — no FFT recomputation — so panning/zooming the
+    // view stays fast regardless of how long the recording is.
+    if (spec && spec.hop && state.duration > 0 && offscreen.width > 0) {
+      const view = currentView();
+      const framesPerSec = state.sampleRate / spec.hop;
+      let srcX = clamp(view.start * framesPerSec, 0, offscreen.width);
+      let srcW = clamp((view.end - view.start) * framesPerSec, 1, offscreen.width - srcX);
+      ctx.drawImage(offscreen, srcX, 0, srcW, offscreen.height, 0, 0, canvas.width, canvas.height);
+    } else {
+      ctx.drawImage(offscreen, 0, 0, canvas.width, canvas.height);
+    }
+
+    // Shade the time region on this channel that is physically infeasible
+    // given every other currently-active box: for reference channel(s) at
+    // time T with receiver separation d from this channel, the arrival
+    // here must fall within roughly T +/- d/c (triangle inequality on
+    // TDoA), fading smoothly rather than cutting off sharply — see
+    // feasibilityAlpha for why.
+    const feasible = computeFeasibleWindow(ch);
+    if (feasible && state.duration > 0) {
+      if (feasible.lo > feasible.hi) {
+        // over-constrained: no time on this channel satisfies every
+        // other placed box simultaneously — flag the whole channel
+        ctx.fillStyle = 'rgba(226,99,122,0.16)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      } else {
+        ctx.fillStyle = buildFeasibilityGradient(ctx, canvas.width, feasible, state.sigma);
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    // Archived boxes from past saves — drawn after the shading (so they
+    // stay clearly legible rather than dimmed by the *current* call's
+    // feasibility overlay) but before the live box (which stays the most
+    // visually prominent thing on screen). Color rotates by Localization
+    // Index so boxes belonging to the same past call are identifiable
+    // across channels at a glance.
+    const maxFreq = spec ? spec.maxFreqDisplayed : 0;
+    const history = state.lockedBoxes[ch];
+    if (history && history.length > 0) {
+      for (const past of history) {
+        const startPx = timeToPixel(past.timeStart, canvas.width);
+        const endPx = timeToPixel(past.timeEnd, canvas.width);
+        if (endPx < 0 || startPx > canvas.width) continue; // off-screen at the current pan/zoom
+        const hasFreq = past.freqLow != null && past.freqHigh != null;
+        const topPx = hasFreq ? clamp(freqToPixel(past.freqHigh, canvas.height, maxFreq), 0, canvas.height) : 0;
+        const bottomPx = hasFreq ? clamp(freqToPixel(past.freqLow, canvas.height, maxFreq), 0, canvas.height) : canvas.height;
+        const color = lockedColorFor(past.localizationIndex);
+        const x = clamp(startPx, 0, canvas.width);
+        const w = clamp(endPx, 0, canvas.width) - x;
+        const y = topPx, h = bottomPx - topPx;
+        ctx.strokeStyle = past.included ? color : color + '99'; // dimmer if it was excluded (OFF) at save time
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(x, y, w, h);
+      }
+    }
+
+    // Box position is stored in seconds (timeStart/timeEnd), not pixels,
+    // so it stays correct as the view scrolls/zooms — pixel position is
+    // derived here, at render time, from the current view window. A box
+    // entirely outside the visible window simply isn't drawn.
+    const box = state.boxes[ch];
+    if (box && box.candidate) {
+      const boxStartPx = timeToPixel(box.timeStart, canvas.width);
+      const boxEndPx = timeToPixel(box.timeEnd, canvas.width);
+      if (boxEndPx >= 0 && boxStartPx <= canvas.width) {
+        const hasFreq = box.freqLow != null && box.freqHigh != null;
+        const topPx = hasFreq ? clamp(freqToPixel(box.freqHigh, canvas.height, maxFreq), 0, canvas.height) : 0;
+        const bottomPx = hasFreq ? clamp(freqToPixel(box.freqLow, canvas.height, maxFreq), 0, canvas.height) : canvas.height;
+        const conf = clamp(box.confidence || 0, 0, 1);
+        const x = clamp(boxStartPx, 0, canvas.width);
+        const w = clamp(boxEndPx, 0, canvas.width) - x;
+        const y = topPx, h = bottomPx - topPx;
+        // Outline only — no fill or text — so the spectrogram underneath
+        // stays fully visible for a human to judge the suggestion against.
+        // The confidence score still shows on the channel's REF/ON/OFF tag.
+        ctx.strokeStyle = 'rgba(185,140,232,' + (0.4 + conf * 0.5).toFixed(3) + ')';
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([4, 3]);
+        ctx.strokeRect(x, y, w, h);
+        ctx.setLineDash([]);
+
+        // Reject "x" glyph, anchored to this box's own top-right corner
+        // (matching candidateRejectRect exactly, used again for hit-testing)
+        const reject = candidateRejectRect(box, canvas.width, canvas.height, maxFreq);
+        ctx.fillStyle = 'rgba(5,7,10,0.55)';
+        ctx.fillRect(reject.x, reject.y, reject.w, reject.h);
+        ctx.strokeStyle = 'rgba(226,99,122,0.9)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(reject.x + 3, reject.y + 3);
+        ctx.lineTo(reject.x + reject.w - 3, reject.y + reject.h - 3);
+        ctx.moveTo(reject.x + reject.w - 3, reject.y + 3);
+        ctx.lineTo(reject.x + 3, reject.y + reject.h - 3);
+        ctx.stroke();
+      }
+    } else if (box) {
+      const boxStartPx = timeToPixel(box.timeStart, canvas.width);
+      const boxEndPx = timeToPixel(box.timeEnd, canvas.width);
+      if (boxEndPx >= 0 && boxStartPx <= canvas.width) {
+        const hasFreq = box.freqLow != null && box.freqHigh != null;
+        const topPx = hasFreq ? clamp(freqToPixel(box.freqHigh, canvas.height, maxFreq), 0, canvas.height) : 0;
+        const bottomPx = hasFreq ? clamp(freqToPixel(box.freqLow, canvas.height, maxFreq), 0, canvas.height) : canvas.height;
+        const active = activeBoxedChannels();
+        const isRef = active[0] === ch;
+        const dim = !box.active;
+        const strokeColor = dim ? '#4C5666' : (isRef ? '#F2A65A' : '#4FD8C4');
+        const fillColor = dim ? 'rgba(76,86,102,0.10)' : (isRef ? 'rgba(242,166,90,0.12)' : 'rgba(79,216,196,0.12)');
+        ctx.strokeStyle = strokeColor;
+        ctx.fillStyle = fillColor;
+        ctx.lineWidth = 2;
+        if (dim) ctx.setLineDash([5, 3]);
+        const x = clamp(boxStartPx, 0, canvas.width);
+        const w = clamp(boxEndPx, 0, canvas.width) - x;
+        const y = topPx, h = bottomPx - topPx;
+        ctx.fillRect(x, y, w, h);
+        ctx.strokeRect(x, y, w, h);
+        // center line (only if the center itself is within view)
+        const cx = timeToPixel(box.centerTime, canvas.width);
+        if (cx >= 0 && cx <= canvas.width) {
+          ctx.beginPath();
+          ctx.moveTo(cx, y);
+          ctx.lineTo(cx, y + h);
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+      }
+    }
+
+    updateAxisLabels(entry);
+    updateRefTag(ch);
+  }
+
+  // All channels (in creation order) whose box is currently active — i.e.
+  // participating in the reference/likelihood/feasibility calculations.
+  function activeBoxedChannels() {
+    return state.boxOrder.filter((ch) => state.boxes[ch] && state.boxes[ch].active);
+  }
+
+  function physicalDistanceMeters(chA, chB) {
+    const a = state.receivers[chA], b = state.receivers[chB];
+    const dx = a.x - b.x, dy = a.y - b.y;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  // Feasible arrival-time window for `ch`, given every other active box,
+  // using the triangle-inequality bound |TOA_ch - TOA_other| <= dist/c.
+  // Returns null when there's not enough info yet to constrain anything.
+  function computeFeasibleWindow(ch) {
+    if (state.receivers.length === 0 || ch >= state.receivers.length) return null;
+    const others = activeBoxedChannels().filter((o) => o !== ch && o < state.receivers.length);
+    if (others.length === 0) return null;
+
+    let lo = -Infinity, hi = Infinity;
+    for (const o of others) {
+      const maxDelta = physicalDistanceMeters(ch, o) / state.soundSpeed;
+      const T = state.boxes[o].centerTime;
+      lo = Math.max(lo, T - maxDelta);
+      hi = Math.min(hi, T + maxDelta);
+    }
+    return { lo, hi };
+  }
+
+  // The hard triangle-inequality bound (lo/hi above) is exact only for
+  // perfectly noiseless timing. With real measurement/sync error of scale
+  // sigma, a time just past the boundary is still nearly as plausible as
+  // one just inside it. So rather than an instant cutoff, shading opacity
+  // follows a half-normal curve in the *excess* distance past the
+  // boundary: 0 (fully clear) exactly at the boundary, rising smoothly
+  // over a characteristic width of sigma, saturating near 1 (fully
+  // shaded) several sigma beyond it. Reuses state.sigma directly — the
+  // same timing-uncertainty parameter already driving the map's
+  // likelihood surface, rather than introducing a separate knob.
+  function feasibilityAlpha(excessSeconds, sigmaSec) {
+    if (excessSeconds <= 0) return 0;
+    if (!(sigmaSec > 0)) return 1; // no smoothing configured -> instant hard cutoff
+    return 1 - Math.exp(-(excessSeconds * excessSeconds) / (2 * sigmaSec * sigmaSec));
+  }
+
+  // For every channel with geometry loaded but no box yet (and not
+  // explicitly dismissed), searches its feasible time window for a
+  // correlation peak against the reference channel's boxed clip, and
+  // stores the result as a candidate box (box.candidate = true) with a
+  // confidence score. Doesn't touch channels that already have an
+  // accepted (active) box, or a not-yet-decided candidate is refreshed
+  // in place, since tighter constraints from newly-accepted boxes
+  // elsewhere may narrow and improve the search.
+  //
+  // The search window isn't a hard [lo, hi] cutoff: it's extended by a
+  // few sigma on each side and the correlation score is scaled by the
+  // same half-normal feasibilityAlpha used for the shading, so a true
+  // peak sitting right at (or just past) the boundary isn't clipped away
+  // by edge effects — it's just down-weighted smoothly, same principle
+  // as the shading itself.
+  const SEARCH_EXTENSION_SIGMAS = 3; // how many sigma beyond [lo,hi] to search
+  const CONFIDENCE_Z_SATURATE = 8;   // peak z-score (vs. the rest of the correlation) treated as ~maximal confidence
+  function generateCandidateBoxes() {
+    if (!state.autoSuggest) return;
+    if (!state.audioBuffer || state.receivers.length === 0) return;
+
+    const active = activeBoxedChannels();
+    if (active.length === 0) return; // nothing to correlate against yet
+    const refCh = active[0];
+    const refBox = state.boxes[refCh];
+    if (!refBox) return;
+
+    for (let ch = 0; ch < state.numChannels; ch++) {
+      if (ch >= state.receivers.length) continue; // no geometry for this channel
+      if (ch === refCh) continue;
+      // Skip any channel that already has an accepted box — ON *or* OFF.
+      // OFF only excludes a box from the localization math (see
+      // toggleBoxActive); it must never be silently replaced by a fresh
+      // suggestion, or the ON/OFF toggle wouldn't be a true two-way state.
+      if (state.boxes[ch] && !state.boxes[ch].candidate) continue;
+      if (state.rejectedChannels.has(ch)) continue;
+
+      const feasible = computeFeasibleWindow(ch);
+      if (!feasible || feasible.lo > feasible.hi) {
+        if (state.boxes[ch] && state.boxes[ch].candidate) delete state.boxes[ch];
+        continue;
+      }
+
+      const candidate = correlateChannelForCandidate(ch, refCh, refBox, feasible);
+      if (candidate) {
+        state.boxes[ch] = candidate;
+      } else if (state.boxes[ch] && state.boxes[ch].candidate) {
+        delete state.boxes[ch]; // segment too short / at file edge — couldn't search
+      }
+    }
+  }
+
+  // Runs the actual correlation for one candidate channel. Returns a
+  // candidate box object, or null if the segments involved were too
+  // short to search (e.g. right at the start/end of the file).
+  function correlateChannelForCandidate(ch, refCh, refBox, feasible) {
+    const sr = state.sampleRate;
+    const refSamples = state.audioBuffer.getChannelData(refCh);
+    const candSamples = state.audioBuffer.getChannelData(ch);
+
+    // Symmetric padding around the reference box keeps its center exactly
+    // at the padded segment's midpoint, so the box's original center time
+    // propagates cleanly through the correlation without extra bookkeeping.
+    const boxWidthSec = refBox.timeEnd - refBox.timeStart;
+    const pad = Math.max(boxWidthSec * 0.15, 0.005);
+    const refStartTime = Math.max(0, refBox.timeStart - pad);
+    const refEndTime = Math.min(state.duration, refBox.timeEnd + pad);
+    const refStartSample = Math.round(refStartTime * sr);
+    const refEndSample = Math.round(refEndTime * sr);
+    const refClip = refSamples.subarray(refStartSample, refEndSample);
+    if (refClip.length < 8) return null;
+
+    const sigma = state.sigma;
+    const searchLo = Math.max(0, feasible.lo - SEARCH_EXTENSION_SIGMAS * sigma);
+    const searchHi = Math.min(state.duration, feasible.hi + SEARCH_EXTENSION_SIGMAS * sigma);
+    if (searchHi <= searchLo) return null;
+
+    // Extra margin so a full-length reference clip can be tested at any
+    // position within [searchLo, searchHi], not just ones far enough from
+    // the edges to fit — without this, positions near the search bounds
+    // would be systematically unreachable/truncated.
+    const halfRefDur = refClip.length / sr / 2;
+    const extractStartTime = Math.max(0, searchLo - halfRefDur);
+    const extractEndTime = Math.min(state.duration, searchHi + halfRefDur);
+    const extractStartSample = Math.round(extractStartTime * sr);
+    const extractEndSample = Math.round(extractEndTime * sr);
+    const searchClip = candSamples.subarray(extractStartSample, extractEndSample);
+    if (searchClip.length <= refClip.length) return null;
+
+    const corr = correlateSegments(refClip, searchClip, state.correlationMode, sr, refBox.freqLow, refBox.freqHigh);
+
+    // Weight each candidate position by how feasible its implied arrival
+    // time is, then pick the best-weighted position — not just the raw
+    // correlation max — so a strong but wildly-infeasible peak (e.g. from
+    // a similar-sounding but different call) doesn't win over a weaker,
+    // physically-plausible one.
+    let bestK = 0, bestWeighted = -Infinity;
+    let sum = 0, sumSq = 0;
+    for (let k = 0; k < corr.length; k++) {
+      const centerSample = extractStartSample + k + refClip.length / 2;
+      const t = centerSample / sr;
+      const excess = t < feasible.lo ? feasible.lo - t : (t > feasible.hi ? t - feasible.hi : 0);
+      const weight = 1 - feasibilityAlpha(excess, sigma);
+      const weighted = corr[k] * weight;
+      if (weighted > bestWeighted) { bestWeighted = weighted; bestK = k; }
+      sum += corr[k];
+      sumSq += corr[k] * corr[k];
+    }
+
+    const mean = sum / corr.length;
+    const variance = Math.max(0, sumSq / corr.length - mean * mean);
+    const std = Math.sqrt(variance);
+    const zScore = (corr[bestK] - mean) / (std + 1e-9);
+    const confidence = clamp(zScore / CONFIDENCE_Z_SATURATE, 0, 1);
+
+    const centerTime = (extractStartSample + bestK + refClip.length / 2) / sr;
+    const halfBoxWidth = boxWidthSec / 2;
+
+    return {
+      timeStart: centerTime - halfBoxWidth,
+      timeEnd: centerTime + halfBoxWidth,
+      centerTime,
+      freqLow: refBox.freqLow,
+      freqHigh: refBox.freqHigh,
+      active: false,
+      candidate: true,
+      confidence,
+    };
+  }
+
+  function acceptCandidateBox(ch) {
+    const box = state.boxes[ch];
+    if (!box || !box.candidate) return;
+    box.candidate = false;
+    box.confidence = null;
+    box.active = true;
+    if (!state.boxOrder.includes(ch)) state.boxOrder.push(ch);
+    refreshAllWithSuggestions();
+  }
+
+  function rejectCandidateBox(ch) {
+    const box = state.boxes[ch];
+    if (!box || !box.candidate) return;
+    delete state.boxes[ch];
+    state.rejectedChannels.add(ch);
+    refreshAllWithSuggestions();
+  }
+
+  // Builds a canvas gradient spanning the full width of the (view-window
+  // -relative) canvas, sampling feasibilityAlpha at a fixed number of
+  // stops. A gradient (one fillRect) renders far more cheaply than a
+  // per-pixel loop, and 150 stops across a 900px canvas is dense enough
+  // that the curve reads as smooth at this UI's scale.
+  function buildFeasibilityGradient(ctx, canvasWidth, feasible, sigmaSec) {
+    const gradient = ctx.createLinearGradient(0, 0, canvasWidth, 0);
+    const numStops = 150;
+    for (let i = 0; i <= numStops; i++) {
+      const x = (i / numStops) * canvasWidth;
+      const t = pixelToTime(x, canvasWidth);
+      const excess = t < feasible.lo ? feasible.lo - t : (t > feasible.hi ? t - feasible.hi : 0);
+      const alpha = feasibilityAlpha(excess, sigmaSec) * 0.65; // opacity ceiling — higher = starker contrast against feasible regions
+      gradient.addColorStop(i / numStops, 'rgba(5,7,10,' + alpha.toFixed(3) + ')');
+    }
+    return gradient;
+  }
+
+  function updateRefTag(ch) {
+    const tagEl = $('refTag' + ch);
+    if (!tagEl) return;
+    const box = state.boxes[ch];
+    if (!box) {
+      tagEl.textContent = '';
+      tagEl.className = 'ref-tag';
+      return;
+    }
+    if (box.candidate) {
+      const conf = clamp(box.confidence || 0, 0, 1);
+      tagEl.textContent = Math.round(conf * 100) + '%';
+      tagEl.className = 'ref-tag is-candidate';
+      return;
+    }
+    if (!box.active) {
+      tagEl.textContent = 'OFF';
+      tagEl.className = 'ref-tag is-off';
+      return;
+    }
+    const active = activeBoxedChannels();
+    if (active[0] === ch) {
+      tagEl.textContent = 'REF';
+      tagEl.className = 'ref-tag is-ref';
+    } else {
+      tagEl.textContent = 'ON';
+      tagEl.className = 'ref-tag is-active';
+    }
+  }
+
+  function toggleBoxActive(ch) {
+    const box = state.boxes[ch];
+    if (!box || box.candidate) return; // candidates use click/double-click on the box itself, not this tag
+    box.active = !box.active;
+    refreshAllWithSuggestions();
+  }
+
+  // Candidate boxes get a small reject hit-region in their own top-right
+  // corner (in canvas-pixel space) — used by both the renderer and the
+  // pointerDown hit-test below, so they always agree exactly.
+  function candidateRejectRect(box, canvasWidth, canvasHeight, maxFreq) {
+    const boxEndPx = clamp(timeToPixel(box.timeEnd, canvasWidth), 0, canvasWidth);
+    const hasFreq = box.freqHigh != null && canvasHeight != null;
+    const boxTopPx = hasFreq ? clamp(freqToPixel(box.freqHigh, canvasHeight, maxFreq), 0, canvasHeight) : 2;
+    const size = 14;
+    return {
+      x: clamp(boxEndPx - size, 0, canvasWidth - size),
+      y: clamp(boxTopPx + 2, 0, (canvasHeight || size + 4) - size),
+      w: size,
+      h: size,
+    };
+  }
+
+  function attachBoxInteraction(entry) {
+    const { canvas, ch } = entry;
+    let dragging = null; // {mode: 'create'|'move'|'acceptCandidate', startX, startY, origBox}
+
+    function maxFreq() {
+      return entry.spec ? entry.spec.maxFreqDisplayed : 0;
+    }
+
+    function canvasX(evt) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+      const relX = (clientX - rect.left) / rect.width;
+      return clamp(relX, 0, 1) * canvas.width;
+    }
+    function canvasXY(evt) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+      const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+      return [
+        clamp((clientX - rect.left) / rect.width, 0, 1) * canvas.width,
+        clamp((clientY - rect.top) / rect.height, 0, 1) * canvas.height,
+      ];
+    }
+
+    function pointerDown(evt) {
+      const existing = state.boxes[ch];
+
+      if (existing && existing.candidate) {
+        const [px, py] = canvasXY(evt);
+        const reject = candidateRejectRect(existing, canvas.width, canvas.height, maxFreq());
+        if (px >= reject.x && px <= reject.x + reject.w && py >= reject.y && py <= reject.y + reject.h) {
+          evt.preventDefault();
+          rejectCandidateBox(ch);
+          return;
+        }
+      }
+
+      evt.preventDefault();
+      const [x, y] = canvasXY(evt);
+      const freqTopPx = existing ? freqToPixel(existing.freqHigh, canvas.height, maxFreq()) : 0;
+      const freqBottomPx = existing ? freqToPixel(existing.freqLow, canvas.height, maxFreq()) : 0;
+      const hitExisting = existing &&
+        x >= timeToPixel(existing.timeStart, canvas.width) - 4 &&
+        x <= timeToPixel(existing.timeEnd, canvas.width) + 4 &&
+        y >= freqTopPx - 4 && y <= freqBottomPx + 4;
+
+      if (hitExisting) {
+        dragging = { mode: existing.candidate ? 'acceptCandidate' : 'move', startX: x, origBox: { ...existing } };
+      } else {
+        // Click one corner, drag to the opposite corner — direction doesn't
+        // matter, min/max on each axis handles any drag direction.
+        dragging = { mode: 'create', startX: x, startY: y };
+        const t = pixelToTime(x, canvas.width);
+        const f = pixelToFreq(y, canvas.height, maxFreq());
+        state.boxes[ch] = { timeStart: t, timeEnd: t, centerTime: t, freqLow: f, freqHigh: f, active: true };
+        if (!state.boxOrder.includes(ch)) state.boxOrder.push(ch);
+      }
+      window.addEventListener('mousemove', pointerMove);
+      window.addEventListener('mouseup', pointerUp);
+      window.addEventListener('touchmove', pointerMove, { passive: false });
+      window.addEventListener('touchend', pointerUp);
+    }
+
+    function pointerMove(evt) {
+      if (!dragging) return;
+      evt.preventDefault();
+      const [x, y] = canvasXY(evt);
+
+      if (dragging.mode === 'create') {
+        const box = state.boxes[ch];
+        const tA = pixelToTime(dragging.startX, canvas.width);
+        const tB = pixelToTime(x, canvas.width);
+        box.timeStart = Math.min(tA, tB);
+        box.timeEnd = Math.max(tA, tB);
+        // enforce a small minimum width (~4px at the current zoom level)
+        const view = currentView();
+        const minWidthSec = view.length > 0 ? (4 / canvas.width) * view.length : 0.001;
+        if (box.timeEnd - box.timeStart < minWidthSec) box.timeEnd = box.timeStart + minWidthSec;
+        box.centerTime = (box.timeStart + box.timeEnd) / 2;
+
+        const fA = pixelToFreq(dragging.startY, canvas.height, maxFreq());
+        const fB = pixelToFreq(y, canvas.height, maxFreq());
+        box.freqLow = Math.min(fA, fB);
+        box.freqHigh = Math.max(fA, fB);
+        // enforce a small minimum height (~4px), same convention as width
+        const mf = maxFreq();
+        const minHeightHz = mf > 0 ? (4 / canvas.height) * mf : 1;
+        if (box.freqHigh - box.freqLow < minHeightHz) box.freqHigh = box.freqLow + minHeightHz;
+      } else {
+        // Shared position math for both 'move' (an already-active box) and
+        // 'acceptCandidate' (a candidate being dragged into place) — only
+        // the resulting active/candidate flags differ. Further dragging
+        // only moves in time, not frequency — the band stays exactly what
+        // it was drawn/inherited as.
+        const view = currentView();
+        const deltaSec = view.length > 0 ? ((x - dragging.startX) / canvas.width) * view.length : 0;
+        const widthSec = dragging.origBox.timeEnd - dragging.origBox.timeStart;
+        const newStart = clamp(dragging.origBox.timeStart + deltaSec, 0, Math.max(0, state.duration - widthSec));
+        if (dragging.mode === 'acceptCandidate') {
+          state.boxes[ch] = {
+            timeStart: newStart, timeEnd: newStart + widthSec, centerTime: newStart + widthSec / 2,
+            freqLow: dragging.origBox.freqLow, freqHigh: dragging.origBox.freqHigh,
+            active: false, candidate: true, confidence: dragging.origBox.confidence,
+          };
+        } else {
+          state.boxes[ch] = {
+            timeStart: newStart, timeEnd: newStart + widthSec, centerTime: newStart + widthSec / 2,
+            freqLow: dragging.origBox.freqLow, freqHigh: dragging.origBox.freqHigh,
+            active: dragging.origBox.active,
+          };
+        }
+      }
+
+      // Full redraw (not just this channel) because moving one box can
+      // change the feasible-region shading on every other channel.
+      scheduleUpdate();
+    }
+
+    function pointerUp() {
+      const wasInteracting = !!dragging;
+      if (dragging && dragging.mode === 'acceptCandidate') {
+        const box = state.boxes[ch];
+        if (box) {
+          box.active = true;
+          box.candidate = false;
+          box.confidence = null;
+          if (!state.boxOrder.includes(ch)) state.boxOrder.push(ch);
+        }
+      }
+      dragging = null;
+      window.removeEventListener('mousemove', pointerMove);
+      window.removeEventListener('mouseup', pointerUp);
+      window.removeEventListener('touchmove', pointerMove);
+      window.removeEventListener('touchend', pointerUp);
+      // Finalize: regenerate suggestions for the remaining unboxed
+      // channels now that this box has settled (created, moved, or a
+      // candidate accepted) — not on every intermediate drag frame.
+      if (wasInteracting) refreshAllWithSuggestions();
+    }
+
+    canvas.addEventListener('mousedown', pointerDown);
+    canvas.addEventListener('touchstart', pointerDown, { passive: false });
+
+    canvas.addEventListener('dblclick', () => {
+      const box = state.boxes[ch];
+      if (box && box.candidate) return; // candidates are rejected via the × corner, not double-click
+      delete state.boxes[ch];
+      state.boxOrder = state.boxOrder.filter((c) => c !== ch);
+      refreshAllWithSuggestions();
+    });
+  }
+
+  $('clearBoxesBtn').addEventListener('click', () => {
+    state.boxes = {};
+    state.boxOrder = [];
+    state.rejectedChannels.clear();
+    refreshAllWithSuggestions();
+  });
+
+  $('saveLocalizationBtn').addEventListener('click', () => saveLocalization());
+  $('undoSaveBtn').addEventListener('click', () => undoLastSave());
+
+  document.querySelectorAll('.saved-view-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      state.savedTableView = btn.dataset.view;
+      renderSavedLocalizationsTable();
+    });
+  });
+  $('exportAllBtn').addEventListener('click', () => exportAll());
+
+  // ---------------------------------------------------------------------
+  // Geometry loading (CSV: lat,lon OR x,y per row, in channel order)
+  // ---------------------------------------------------------------------
+  document.querySelectorAll('#csvModeToggle .saved-view-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      state.csvInputMode = btn.dataset.mode;
+      document.querySelectorAll('#csvModeToggle .saved-view-btn').forEach((b) => b.classList.toggle('is-current', b === btn));
+    });
+  });
+
+  $('csvInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) loadCsvFile(file);
+  });
+
+  function loadCsvFile(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const rows = parseCsv(reader.result);
+        if (rows.length < 2) {
+          $('csvStatus').textContent = 'Need at least 2 receivers.';
+          return;
+        }
+        const warning = checkCsvModeSanity(rows, state.csvInputMode);
+        if (state.csvInputMode === 'metric') setReceiversMetric(rows);
+        else setReceivers(rows);
+
+        let statusText = file.name + ' — ' + rows.length + ' receivers loaded';
+        if (warning) statusText += ' — \u26a0 ' + warning;
+        $('csvStatus').textContent = statusText;
+        $('csvStatus').classList.toggle('upload-status-warning', !!warning);
+
+        state.mapZoom = 1;
+        state.mapPanX = 0;
+        state.mapPanY = 0;
+        state.rejectedChannels.clear();
+        updateMapZoomUI();
+        buildDistanceGrids();
+        refreshAllWithSuggestions();
+      } catch (err) {
+        $('csvStatus').textContent = 'Could not parse CSV: ' + err.message;
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function parseCsv(text) {
+    const lines = text.trim().split(/\r?\n/).filter((l) => l.trim().length > 0);
+    const rows = [];
+    for (let line of lines) {
+      const parts = line.split(',').map((p) => p.trim());
+      const lat = parseFloat(parts[0]);
+      const lon = parseFloat(parts[1]);
+      if (Number.isNaN(lat) || Number.isNaN(lon)) continue; // skips a header row
+      rows.push({ lat, lon });
+    }
+    return rows;
+  }
+
+  // Equirectangular projection to local ENU meters, relative to the
+  // centroid of all receivers. Good enough at the few-km scale this
+  // tool is meant for.
+  function setReceivers(rows) {
+    const meanLat = rows.reduce((s, r) => s + r.lat, 0) / rows.length;
+    const meanLon = rows.reduce((s, r) => s + r.lon, 0) / rows.length;
+    const R = 6371000; // meters
+    const latRad = (meanLat * Math.PI) / 180;
+
+    state.projOriginLat = meanLat;
+    state.projOriginLon = meanLon;
+
+    state.receivers = rows.map((r) => {
+      const dLat = ((r.lat - meanLat) * Math.PI) / 180;
+      const dLon = ((r.lon - meanLon) * Math.PI) / 180;
+      const x = dLon * Math.cos(latRad) * R;
+      const y = dLat * R;
+      return { lat: r.lat, lon: r.lon, x, y };
+    });
+  }
+
+  // Metric input: the CSV's two columns are used directly as (east,
+  // north) meters — same orientation as the lat/lon projection above, so
+  // the two modes stay geometrically consistent, but with no projection
+  // step and no geographic origin. Anything downstream that wants
+  // lat/lon (map corner labels, status line, exports) falls back to
+  // showing raw meters instead, since worldToLatLon returns null here.
+  function setReceiversMetric(rows) {
+    state.projOriginLat = null;
+    state.projOriginLon = null;
+    state.receivers = rows.map((r) => ({ x: r.lat, y: r.lon }));
+  }
+
+  // Lightweight, non-blocking sanity check for the common mistake of
+  // leaving the Lat/Lon vs Metric toggle on the wrong setting — catches
+  // it even if the toggle itself goes unnoticed. Two checks, both cheap:
+  // values that are out of range to ever be a real lat/lon (Lat/Lon mode
+  // selected), or values that fall entirely within valid lat/lon ranges
+  // (Metric mode selected, but the numbers look exactly like coordinates
+  // that should have been projected). Neither is definitive — a
+  // legitimately tiny metric survey could trigger the second one — so
+  // this returns a suggestion to double-check, not an error.
+  function checkCsvModeSanity(rows, mode) {
+    if (mode === 'latlon') {
+      const outOfRange = rows.some((r) => Math.abs(r.lat) > 90 || Math.abs(r.lon) > 180);
+      if (outOfRange) {
+        return 'these values are outside valid latitude/longitude ranges (\u00b190\u00b0/\u00b1180\u00b0) — did you mean to select "Metric"?';
+      }
+    } else {
+      const looksGeographic = rows.every((r) => Math.abs(r.lat) <= 90 && Math.abs(r.lon) <= 180);
+      if (looksGeographic) {
+        return 'these values all fall within valid latitude/longitude ranges — if this is actually geographic data, select "Lat/Lon" instead.';
+      }
+    }
+    return null;
+  }
+
+  // Inverse of the projection above: local ENU meters -> lat/lon. Returns
+  // null when there's no geographic origin (metric-mode geometry) — every
+  // caller needs to handle that, not just assume lat/lon always exists.
+  function worldToLatLon(x, y) {
+    if (state.projOriginLat === undefined || state.projOriginLat === null) return null;
+    const R = 6371000;
+    const latRad = (state.projOriginLat * Math.PI) / 180;
+    const lat = state.projOriginLat + ((y / R) * 180) / Math.PI;
+    const lon = state.projOriginLon + ((x / (R * Math.cos(latRad))) * 180) / Math.PI;
+    return { lat, lon };
+  }
+
+  function formatLat(lat) { return Math.abs(lat).toFixed(4) + '\u00b0' + (lat >= 0 ? 'N' : 'S'); }
+  function formatLon(lon) { return Math.abs(lon).toFixed(4) + '\u00b0' + (lon >= 0 ? 'E' : 'W'); }
+
+  function buildDistanceGrids() {
+    if (state.receivers.length === 0) return;
+    const xs = state.receivers.map((r) => r.x);
+    const ys = state.receivers.map((r) => r.y);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    const spanX = Math.max(1, maxX - minX);
+    const spanY = Math.max(1, maxY - minY);
+    const marginX = spanX * 0.35 + 5;
+    const marginY = spanY * 0.35 + 5;
+
+    state.gridBounds = {
+      minX: minX - marginX, maxX: maxX + marginX,
+      minY: minY - marginY, maxY: maxY + marginY,
+    };
+
+    const res = parseInt($('resSelect').value, 10);
+    state.gridW = res;
+    state.gridH = res;
+
+    const { minX: gMinX, maxX: gMaxX, minY: gMinY, maxY: gMaxY } = state.gridBounds;
+    state.distanceGrids = state.receivers.map((r) => {
+      const grid = new Float32Array(state.gridW * state.gridH);
+      for (let iy = 0; iy < state.gridH; iy++) {
+        const gy = gMinY + ((gMaxY - gMinY) * iy) / (state.gridH - 1);
+        for (let ix = 0; ix < state.gridW; ix++) {
+          const gx = gMinX + ((gMaxX - gMinX) * ix) / (state.gridW - 1);
+          const dx = gx - r.x, dy = gy - r.y;
+          grid[iy * state.gridW + ix] = Math.sqrt(dx * dx + dy * dy);
+        }
+      }
+      return grid;
+    });
+
+    updateMapBoundsLabels();
+  }
+
+  function updateMapBoundsLabels() {
+    const ids = ['mapBoundNW', 'mapBoundNE', 'mapBoundSW', 'mapBoundSE'];
+    if (!state.gridBounds) {
+      ids.forEach((id) => { $(id).textContent = ''; });
+      return;
+    }
+    const w = heatCanvas.width, h = heatCanvas.height;
+    const corners = {
+      mapBoundNW: screenToWorld(0, 0),
+      mapBoundNE: screenToWorld(w, 0),
+      mapBoundSW: screenToWorld(0, h),
+      mapBoundSE: screenToWorld(w, h),
+    };
+    for (const id in corners) {
+      const [wx, wy] = corners[id];
+      const ll = worldToLatLon(wx, wy);
+      $(id).textContent = ll
+        ? formatLat(ll.lat) + ', ' + formatLon(ll.lon)
+        : 'x=' + wx.toFixed(1) + 'm, y=' + wy.toFixed(1) + 'm';
+    }
+  }
+
+  $('resSelect').addEventListener('change', () => {
+    if (state.receivers.length > 0) {
+      buildDistanceGrids();
+      computeAndRenderLikelihood();
+    }
+  });
+  $('chanHoToggle').addEventListener('change', (e) => {
+    state.chanHoEnabled = e.target.checked;
+    computeAndRenderLikelihood();
+  });
+
+  // ---------------------------------------------------------------------
+  // Map + likelihood rendering
+  // ---------------------------------------------------------------------
+  const heatCanvas = $('heatCanvas');
+  const markerCanvas = $('markerCanvas');
+
+  function worldToCanvas(x, y) {
+    const { minX, maxX, minY, maxY } = state.gridBounds;
+    const cx = ((x - minX) / (maxX - minX)) * heatCanvas.width;
+    // flip y: north (larger lat -> larger y in meters) should be up on screen
+    const cy = heatCanvas.height - ((y - minY) / (maxY - minY)) * heatCanvas.height;
+    return [cx, cy];
+  }
+
+  // Inverse of worldToCanvas: canvas-pixel (pre pan/zoom transform) -> world meters.
+  function canvasToWorld(cx, cy) {
+    const { minX, maxX, minY, maxY } = state.gridBounds;
+    const x = minX + (cx / heatCanvas.width) * (maxX - minX);
+    const y = minY + ((heatCanvas.height - cy) / heatCanvas.height) * (maxY - minY);
+    return [x, y];
+  }
+
+  // Applies the current pan/zoom as a canvas transform: zoom centered on
+  // the canvas, then pan (in the same internal-pixel units used
+  // elsewhere). Everything drawn afterward — using the same
+  // worldToCanvas-derived pixel coordinates as always — ends up
+  // correctly panned/zoomed with no other code needing to change. Must
+  // be paired with ctx.save()/ctx.restore() around the draw calls.
+  function applyMapTransform(ctx) {
+    const w = heatCanvas.width, h = heatCanvas.height;
+    ctx.translate(w / 2 + state.mapPanX, h / 2 + state.mapPanY);
+    ctx.scale(state.mapZoom, state.mapZoom);
+    ctx.translate(-w / 2, -h / 2);
+  }
+
+  // Inverse of applyMapTransform: screen (post-transform) canvas-pixel -> world meters.
+  function screenToWorld(sx, sy) {
+    const w = heatCanvas.width, h = heatCanvas.height;
+    const px = (sx - w / 2 - state.mapPanX) / state.mapZoom + w / 2;
+    const py = (sy - h / 2 - state.mapPanY) / state.mapZoom + h / 2;
+    return canvasToWorld(px, py);
+  }
+
+  function maxMapPan() {
+    // How far the content edge can move before leaving a gap at the
+    // viewport edge — zero at zoom=1 (nothing to pan when fully zoomed out).
+    return {
+      x: (heatCanvas.width / 2) * (state.mapZoom - 1),
+      y: (heatCanvas.height / 2) * (state.mapZoom - 1),
+    };
+  }
+
+  function setMapPan(panX, panY) {
+    const maxPan = maxMapPan();
+    state.mapPanX = clamp(panX, -maxPan.x, maxPan.x);
+    state.mapPanY = clamp(panY, -maxPan.y, maxPan.y);
+  }
+
+  // Inverse of the world coordinates used to build the distance grids —
+  // takes fractional grid indices (as produced by marching squares, which
+  // interpolates between grid points) back to world meters.
+  function gridIndexToWorld(ix, iy) {
+    const { minX, maxX, minY, maxY } = state.gridBounds;
+    const gx = minX + ((maxX - minX) * ix) / (state.gridW - 1);
+    const gy = minY + ((maxY - minY) * iy) / (state.gridH - 1);
+    return [gx, gy];
+  }
+
+  // Extracts the zero-contour of a scalar field sampled on a state.gridW x
+  // state.gridH grid (flat, row-major as iy*gridW+ix — same layout as the
+  // distance grids), via standard marching squares with linear edge
+  // interpolation. Returns a list of line segments in fractional grid-index
+  // space: [[ix1,iy1], [ix2,iy2]]. Used to draw each pairwise TDoA
+  // hyperbola exactly (modeled TDoA == measured TDoA), rather than just
+  // showing it blurred into the Gaussian likelihood surface.
+  function marchingSquaresContour(field, gridW, gridH) {
+    const segments = [];
+    function interp(vA, vB) {
+      const denom = vA - vB;
+      return denom === 0 ? 0.5 : vA / denom;
+    }
+    for (let iy = 0; iy < gridH - 1; iy++) {
+      for (let ix = 0; ix < gridW - 1; ix++) {
+        const i00 = iy * gridW + ix, i10 = iy * gridW + ix + 1;
+        const i11 = (iy + 1) * gridW + ix + 1, i01 = (iy + 1) * gridW + ix;
+        const v00 = field[i00], v10 = field[i10], v11 = field[i11], v01 = field[i01];
+        const s00 = v00 >= 0, s10 = v10 >= 0, s11 = v11 >= 0, s01 = v01 >= 0;
+
+        const crossings = [];
+        if (s00 !== s10) crossings.push({ edge: 'top', pt: [ix + interp(v00, v10), iy] });
+        if (s10 !== s11) crossings.push({ edge: 'right', pt: [ix + 1, iy + interp(v10, v11)] });
+        if (s01 !== s11) crossings.push({ edge: 'bottom', pt: [ix + interp(v01, v11), iy + 1] });
+        if (s00 !== s01) crossings.push({ edge: 'left', pt: [ix, iy + interp(v00, v01)] });
+
+        if (crossings.length === 2) {
+          segments.push([crossings[0].pt, crossings[1].pt]);
+        } else if (crossings.length === 4) {
+          // Saddle cell (opposite corners share sign): pick the pairing
+          // consistent with the cell-center value to avoid a visibly
+          // wrong crossing pattern.
+          const find = (e) => crossings.find((c) => c.edge === e).pt;
+          const centerPositive = (v00 + v10 + v11 + v01) / 4 >= 0;
+          if (s00 === centerPositive) {
+            segments.push([find('top'), find('left')]);
+            segments.push([find('right'), find('bottom')]);
+          } else {
+            segments.push([find('top'), find('right')]);
+            segments.push([find('left'), find('bottom')]);
+          }
+        }
+      }
+    }
+    return segments;
+  }
+
+  function drawMarkers() {
+    const ctx = markerCanvas.getContext('2d');
+    ctx.clearRect(0, 0, markerCanvas.width, markerCanvas.height);
+    if (state.receivers.length === 0) return;
+
+    ctx.save();
+    applyMapTransform(ctx);
+
+    const active = activeBoxedChannels();
+
+    state.receivers.forEach((r, idx) => {
+      const [cx, cy] = worldToCanvas(r.x, r.y);
+      const isRef = active[0] === idx;
+      const isActive = active.includes(idx);
+      const hasInactiveBox = state.boxes[idx] && !state.boxes[idx].active;
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, 7, 0, 2 * Math.PI);
+      if (isRef) {
+        ctx.fillStyle = '#F2A65A';
+        ctx.fill();
+      } else if (isActive) {
+        ctx.fillStyle = '#4FD8C4';
+        ctx.fill();
+      } else {
+        ctx.fillStyle = '#0E1319';
+        ctx.fill();
+        ctx.strokeStyle = hasInactiveBox ? '#8593A8' : '#7C8798';
+        ctx.lineWidth = 1.5;
+        if (hasInactiveBox) ctx.setLineDash([3, 2]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      ctx.font = '10px IBM Plex Mono, monospace';
+      ctx.fillStyle = 'rgba(232,237,242,0.55)';
+      ctx.fillText('CH' + (idx + 1), cx + 10, cy + 3);
+    });
+
+    // Chan-Ho closed-form estimate — a crosshair, deliberately distinct
+    // from every other marker/line color already in use on this map.
+    if (state.chanHoEnabled && state.chanHoResult) {
+      const [ccx, ccy] = worldToCanvas(state.chanHoResult.x, state.chanHoResult.y);
+      const armLen = 9, gap = 3;
+      ctx.strokeStyle = '#4FA8FF';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(ccx - armLen, ccy); ctx.lineTo(ccx - gap, ccy);
+      ctx.moveTo(ccx + gap, ccy); ctx.lineTo(ccx + armLen, ccy);
+      ctx.moveTo(ccx, ccy - armLen); ctx.lineTo(ccx, ccy - gap);
+      ctx.moveTo(ccx, ccy + gap); ctx.lineTo(ccx, ccy + armLen);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(ccx, ccy, 1.5, 0, 2 * Math.PI);
+      ctx.fillStyle = '#4FA8FF';
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
+  // scheduleUpdate: throttled to one redraw per animation frame, for
+  // high-frequency events (dragging a box).
+  // refreshAll: immediate, for discrete events (click, upload, clear).
+  // Both do the same work — a full channel redraw (spectrogram + box +
+  // feasibility shading) plus the likelihood/heatmap recompute — because
+  // shading and the reference channel can change on any box edit.
+  let rafPending = false;
+  function scheduleUpdate() {
+    if (rafPending) return;
+    rafPending = true;
+    requestAnimationFrame(() => {
+      rafPending = false;
+      refreshAll();
+    });
+  }
+
+  function redrawAllChannels() {
+    state.channelCanvases.forEach((e) => drawChannelCanvas(e));
+  }
+
+  function refreshAll() {
+    redrawAllChannels();
+    computeAndRenderLikelihood();
+  }
+
+  // Regenerates candidate boxes, then does a full refresh. Used at
+  // discrete/finalize interaction points (a box is created, moved and
+  // released, accepted, rejected, or a control like sigma/c changes) —
+  // deliberately NOT wired into the continuous per-frame drag path
+  // (scheduleUpdate's RAF callback), since re-running an FFT correlation
+  // for every unboxed channel on every animation frame during a drag
+  // would be wasteful and could feel janky.
+  function refreshAllWithSuggestions() {
+    generateCandidateBoxes();
+    refreshAll();
+  }
+
+  // ---------------------------------------------------------------------
+  // Chan-Ho closed-form TDoA solver (Chan & Ho, 1994). An alternative to
+  // the grid search: no initial guess, no iteration, pure linear algebra
+  // — so it's a genuinely independent cross-check rather than another way
+  // of refining the same starting answer.
+  //
+  // Stage 1 linearizes the (otherwise quadratic) hyperbolic equations via
+  // the auxiliary unknown K = x^2+y^2, giving a linear least-squares
+  // solve for [x, y, r_ref] (r_ref = the unknown true range from the
+  // source to the reference receiver). For receiver i with measured
+  // range difference R_i1 = c*measuredTDoA_i = r_i - r_ref:
+  //
+  //   2(x_i-x_ref)x + 2(y_i-y_ref)y + 2 R_i1 r_ref
+  //     = (x_i^2+y_i^2-x_ref^2-y_ref^2) - R_i1^2
+  //
+  // This needs >= 3 such equations, i.e. >= 4 total active receivers —
+  // one more than the grid search's own minimum of 2, since this is a
+  // fundamentally different (linearized, non-grid) approach.
+  //
+  // Stage 2 exploits that Stage 1's three outputs aren't actually
+  // independent — they must satisfy K=x^2+y^2 and
+  // r_ref^2=(x-x_ref)^2+(y-y_ref)^2 — to refine the estimate. This
+  // implementation uses a deliberately SIMPLIFIED (unweighted) Stage 2:
+  // the textbook version weights by Stage 1's propagated covariance for
+  // full Cramér-Rao efficiency, which needs careful additional derivation
+  // to get right without introducing a subtle error; this version still
+  // uses the consistency constraint, just combined via plain least
+  // squares rather than the statistically optimal weighting.
+  //
+  // Verified numerically against known synthetic source locations
+  // (multiple geometries, reference-channel choices, and both positive
+  // and negative coordinates) before integrating — see the derivation
+  // notes for details if revisiting this.
+  function solve3x3(M, b) {
+    const det3 = (m) =>
+      m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1])
+      - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
+      + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+    const D = det3(M);
+    if (Math.abs(D) < 1e-9) return null;
+    const withCol = (col, vec) => {
+      const m = M.map((r) => r.slice());
+      for (let i = 0; i < 3; i++) m[i][col] = vec[i];
+      return m;
+    };
+    return [det3(withCol(0, b)) / D, det3(withCol(1, b)) / D, det3(withCol(2, b)) / D];
+  }
+
+  function solve2x2(M, b) {
+    const D = M[0][0] * M[1][1] - M[0][1] * M[1][0];
+    if (Math.abs(D) < 1e-9) return null;
+    return [(b[0] * M[1][1] - M[0][1] * b[1]) / D, (M[0][0] * b[1] - b[0] * M[1][0]) / D];
+  }
+
+  // Returns {x, y} in local ENU meters, or null if there's not enough
+  // data (< 4 active receivers) or the geometry is degenerate.
+  function computeChanHo(activeChannels, refCh) {
+    if (activeChannels.length < 4) return null; // 3 equations needed for 3 unknowns
+
+    const ref = state.receivers[refCh];
+    const refTime = state.boxes[refCh].centerTime;
+    const c = state.soundSpeed;
+    const rows = [];
+    const bvals = [];
+
+    for (const ch of activeChannels) {
+      if (ch === refCh) continue;
+      const r = state.receivers[ch];
+      const R = (state.boxes[ch].centerTime - refTime) * c; // R_i1 = r_i - r_ref
+      rows.push([2 * (r.x - ref.x), 2 * (r.y - ref.y), 2 * R]);
+      bvals.push((r.x * r.x + r.y * r.y - ref.x * ref.x - ref.y * ref.y) - R * R);
+    }
+    if (rows.length < 3) return null;
+
+    // Stage 1: OLS on the normal equations (A^T A) theta = A^T b
+    const AtA = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+    const Atb = [0, 0, 0];
+    for (let k = 0; k < rows.length; k++) {
+      for (let i = 0; i < 3; i++) {
+        Atb[i] += rows[k][i] * bvals[k];
+        for (let j = 0; j < 3; j++) AtA[i][j] += rows[k][i] * rows[k][j];
+      }
+    }
+    const stage1 = solve3x3(AtA, Atb);
+    if (!stage1) return null;
+    const [xEst, yEst, r1Est] = stage1;
+
+    // Stage 2: unweighted combination of [u=x^2, v=y^2] soft equations
+    const A2 = [[1, 0], [0, 1], [1, 1]];
+    const b2 = [
+      xEst * xEst,
+      yEst * yEst,
+      r1Est * r1Est + 2 * ref.x * xEst - ref.x * ref.x + 2 * ref.y * yEst - ref.y * ref.y,
+    ];
+    const AtA2 = [[0, 0], [0, 0]], Atb2 = [0, 0];
+    for (let k = 0; k < 3; k++) {
+      for (let i = 0; i < 2; i++) {
+        Atb2[i] += A2[k][i] * b2[k];
+        for (let j = 0; j < 2; j++) AtA2[i][j] += A2[k][i] * A2[k][j];
+      }
+    }
+    const uv = solve2x2(AtA2, Atb2);
+    if (!uv) return { x: xEst, y: yEst };
+    const u = Math.max(0, uv[0]), v = Math.max(0, uv[1]);
+
+    // Sign resolution: pick whichever of the 4 sign combinations lands
+    // closest to Stage 1's own (unsquared) estimate.
+    let best = null, bestDist = Infinity;
+    for (const sx of [1, -1]) {
+      for (const sy of [1, -1]) {
+        const cx = sx * Math.sqrt(u), cy = sy * Math.sqrt(v);
+        const d = (cx - xEst) ** 2 + (cy - yEst) ** 2;
+        if (d < bestDist) { bestDist = d; best = { x: cx, y: cy }; }
+      }
+    }
+    return best;
+  }
+
+  // RMS of the TDoA residuals (in ms) at a candidate location — the
+  // fit-quality readout for Chan-Ho, directly analogous to the grid
+  // search's peak likelihood but expressed as a timing error instead,
+  // since Chan-Ho has no natural "likelihood" of its own.
+  function chanHoRmsResidualMs(loc, activeChannels, refCh) {
+    const ref = state.receivers[refCh];
+    const refTime = state.boxes[refCh].centerTime;
+    const c = state.soundSpeed;
+    const distRef = Math.hypot(loc.x - ref.x, loc.y - ref.y);
+
+    let sumSq = 0, count = 0;
+    for (const ch of activeChannels) {
+      if (ch === refCh) continue;
+      const r = state.receivers[ch];
+      const measuredTdoa = state.boxes[ch].centerTime - refTime;
+      const modeledTdoa = (Math.hypot(loc.x - r.x, loc.y - r.y) - distRef) / c;
+      const residual = measuredTdoa - modeledTdoa;
+      sumSq += residual * residual;
+      count++;
+    }
+    return count > 0 ? Math.sqrt(sumSq / count) * 1000 : null;
+  }
+
+  // Builds the colored offscreen raster from a raw likelihood product
+  // grid. Pulled out on its own specifically so a theme change can
+  // rebuild just this (cheap — one pass over an already-computed grid,
+  // no Gaussian correlation math) via state.mapProductGrid, rather than
+  // needing to recompute the whole likelihood surface just to recolor it.
+  function buildMapRasterFromProduct(product) {
+    const off = document.createElement('canvas');
+    off.width = state.gridW;
+    off.height = state.gridH;
+    const offCtx = off.getContext('2d');
+    const img = offCtx.createImageData(state.gridW, state.gridH);
+
+    for (let iy = 0; iy < state.gridH; iy++) {
+      for (let ix = 0; ix < state.gridW; ix++) {
+        const val = clamp(product[iy * state.gridW + ix], 0, 1);
+        const [r, g, b] = likelihoodColor(val);
+        // flip vertically to match worldToCanvas's y-flip
+        const row = state.gridH - 1 - iy;
+        const idx = (row * state.gridW + ix) * 4;
+        img.data[idx] = r; img.data[idx + 1] = g; img.data[idx + 2] = b; img.data[idx + 3] = Math.round(val * 235);
+      }
+    }
+    offCtx.putImageData(img, 0, 0);
+    return off;
+  }
+
+  function computeAndRenderLikelihood() {
+    updateStatusLine();
+
+    const haveGeometry = state.receivers.length > 0 && state.distanceGrids.length > 0;
+    const activeChannels = activeBoxedChannels().filter((ch) => ch < state.receivers.length);
+    updateSaveButtonState(activeChannels.length >= 2);
+
+    if (!haveGeometry || activeChannels.length < 2) {
+      state.mapRasterImage = null;
+      state.mapPairDiffFields = [];
+      state.mapProductGrid = null;
+      state.lastPeakLatLon = null;
+      state.lastPeakXY = null;
+      state.lastPeakLikelihood = 0;
+      state.chanHoResult = null;
+      state.chanHoRmsMs = null;
+      redrawMapView();
+      return;
+    }
+
+    const refCh = activeChannels[0];
+
+    // Chan-Ho is independent of the grid search (no grid, no sigma
+    // weighting) — computed here so it's ready for the marker/status line
+    // by the time this function finishes, but it never blocks or is
+    // blocked by the grid-search math below.
+    if (state.chanHoEnabled) {
+      const chLoc = computeChanHo(activeChannels, refCh);
+      state.chanHoResult = chLoc;
+      state.chanHoRmsMs = chLoc ? chanHoRmsResidualMs(chLoc, activeChannels, refCh) : null;
+    } else {
+      state.chanHoResult = null;
+      state.chanHoRmsMs = null;
+    }
+
+    const refTime = state.boxes[refCh].centerTime;
+    const refGrid = state.distanceGrids[refCh];
+    const c = state.soundSpeed;
+    const sigma = state.sigma;
+
+    const n = state.gridW * state.gridH;
+    // Each pairwise Gaussian factor is already bounded in [0, 1] by
+    // construction (its peak is exactly 1 where modeled = measured), so
+    // the running product stays in [0, 1] with no extra rescaling needed.
+    // That keeps the colormap an absolute 0-1 scale rather than one that
+    // re-stretches to whatever the current frame's peak happens to be.
+    const product = new Float32Array(n).fill(1);
+    const pairDiffFields = []; // one per (reference, channel) pair, for drawing exact hyperbolas
+
+    for (let k = 1; k < activeChannels.length; k++) {
+      const ch = activeChannels[k];
+      const measuredTdoa = state.boxes[ch].centerTime - refTime;
+      const grid = state.distanceGrids[ch];
+      const diffField = new Float32Array(n);
+      for (let i = 0; i < n; i++) {
+        const modeledTdoa = (grid[i] - refGrid[i]) / c;
+        const diff = modeledTdoa - measuredTdoa;
+        diffField[i] = diff;
+        product[i] *= Math.exp(-(diff * diff) / (2 * sigma * sigma));
+      }
+      pairDiffFields.push(diffField);
+    }
+
+    let maxProduct = 0, maxIndex = 0;
+    for (let i = 0; i < n; i++) {
+      if (product[i] > maxProduct) { maxProduct = product[i]; maxIndex = i; }
+    }
+
+    const peakIx = maxIndex % state.gridW;
+    const peakIy = Math.floor(maxIndex / state.gridW);
+    const [peakX, peakY] = gridIndexToWorld(peakIx, peakIy);
+
+    const off = buildMapRasterFromProduct(product);
+
+    // Cache the finished raster and per-pair fields — pan/zoom redraws
+    // (redrawMapView) reuse these directly with no recomputation, the
+    // same way the spectrogram's crop-blit reuses its precomputed STFT
+    // bitmap. Recomputed only when boxes/sigma/c/grid-resolution change.
+    state.mapRasterImage = off;
+    state.mapPairDiffFields = pairDiffFields;
+    state.mapProductGrid = product;
+
+    redrawMapView();
+
+    const peakLatLon = worldToLatLon(peakX, peakY);
+    state.lastPeakLatLon = peakLatLon;
+    state.lastPeakXY = { x: peakX, y: peakY };
+    state.lastPeakLikelihood = maxProduct;
+
+    updateStatusLine(activeChannels, refCh, refTime, maxProduct, peakLatLon);
+  }
+
+  // Spatial uncertainty: the radius of a circle with the same area as the
+  // region where the likelihood exceeds half the peak value — a cheap,
+  // interpretable "half-max equivalent radius" derived directly from the
+  // grid already computed above. Note this inherits the same caveat
+  // flagged early on for the likelihood surface itself: it's a measure of
+  // how peaked this pseudo-likelihood is, not a formally calibrated
+  // confidence radius (that would need the correlation-corrected
+  // covariance discussed earlier).
+  function computeSpatialUncertaintyRadius() {
+    const grid = state.mapProductGrid;
+    if (!grid || !state.gridBounds) return null;
+    let peak = 0;
+    for (let i = 0; i < grid.length; i++) if (grid[i] > peak) peak = grid[i];
+    if (peak <= 0) return null;
+
+    const threshold = peak * 0.5;
+    let count = 0;
+    for (let i = 0; i < grid.length; i++) if (grid[i] >= threshold) count++;
+
+    const { minX, maxX, minY, maxY } = state.gridBounds;
+    const cellWidth = (maxX - minX) / (state.gridW - 1);
+    const cellHeight = (maxY - minY) / (state.gridH - 1);
+    const area = count * cellWidth * cellHeight;
+    return Math.sqrt(area / Math.PI);
+  }
+
+  // Captures the current localization into state.savedLocalizations (one
+  // row per channel, long/tidy format), archives its boxes into
+  // state.lockedBoxes for permanent display, and clears the live/editable
+  // state — the same reset Clear Boxes performs — so the next call can be
+  // annotated immediately.
+  function saveLocalization() {
+    const active = activeBoxedChannels();
+    if (active.length < 2 || !state.lastPeakXY) return; // guards the button's own disabled state too
+
+    const localizationIndex = state.nextLocalizationId++;
+    const refCh = active[0];
+    const savedAt = new Date().toISOString();
+    const uncertaintyM = computeSpatialUncertaintyRadius();
+
+    const channels = [];
+    for (let ch = 0; ch < state.numChannels; ch++) {
+      const box = state.boxes[ch];
+      const hasBox = !!(box && !box.candidate);
+      channels.push({
+        channel: ch + 1, // 1-indexed, matching this app's own "CH1" labeling and Raven's convention
+        hasBox,
+        // Selection is only assigned to real annotations — an unboxed
+        // channel has no selection to number, matching how Raven itself
+        // has no row for a channel with nothing marked on it.
+        selection: hasBox ? state.nextSelectionId++ : null,
+        beginTime: hasBox ? box.timeStart : null,
+        endTime: hasBox ? box.timeEnd : null,
+        centerTime: hasBox ? box.centerTime : null,
+        duration: hasBox ? (box.timeEnd - box.timeStart) : null,
+        lowFreq: hasBox ? box.freqLow : null,
+        highFreq: hasBox ? box.freqHigh : null,
+        included: hasBox ? !!box.active : false,
+      });
+
+      if (hasBox) {
+        if (!state.lockedBoxes[ch]) state.lockedBoxes[ch] = [];
+        state.lockedBoxes[ch].push({
+          timeStart: box.timeStart, timeEnd: box.timeEnd,
+          freqLow: box.freqLow, freqHigh: box.freqHigh,
+          included: !!box.active, localizationIndex,
+        });
+      }
+    }
+
+    state.savedLocalizations.push({
+      localizationIndex,
+      refChannel: refCh + 1, // 1-indexed
+      savedAt,
+      peakLat: state.lastPeakLatLon ? state.lastPeakLatLon.lat : null,
+      peakLon: state.lastPeakLatLon ? state.lastPeakLatLon.lon : null,
+      peakX: state.lastPeakXY.x,
+      peakY: state.lastPeakXY.y,
+      peakLikelihood: state.lastPeakLikelihood,
+      uncertaintyM,
+      sigma: state.sigma,
+      soundSpeed: state.soundSpeed,
+      gridResolution: state.gridW,
+      channels,
+    });
+
+    state.boxes = {};
+    state.boxOrder = [];
+    state.rejectedChannels.clear();
+
+    renderSavedLocalizationsTable();
+    refreshAllWithSuggestions();
+  }
+
+  // Undoes the most recently saved localization: removes it from the
+  // table and from the archived history, and restores its boxes to the
+  // live/editable state so it can be corrected and re-saved. Only ever
+  // targets the chronologically last save — there's no multi-level undo
+  // stack, so if boxes have since been drawn on the same channels, they'll
+  // be overwritten by the restored ones (standard, predictable undo
+  // behavior, not a merge). The ID counters roll back exactly as far as
+  // this entry advanced them, which is always safe here since nothing
+  // else could have consumed IDs in between.
+  function undoLastSave() {
+    if (state.savedLocalizations.length === 0) return;
+    const loc = state.savedLocalizations.pop();
+
+    state.nextLocalizationId = loc.localizationIndex;
+    let consumedSelections = 0;
+    for (const ch of loc.channels) if (ch.hasBox) consumedSelections++;
+    state.nextSelectionId -= consumedSelections;
+
+    for (const ch of loc.channels) {
+      if (!ch.hasBox) continue;
+      const chIdx = ch.channel - 1;
+      if (state.lockedBoxes[chIdx]) {
+        state.lockedBoxes[chIdx] = state.lockedBoxes[chIdx].filter((b) => b.localizationIndex !== loc.localizationIndex);
+      }
+    }
+
+    state.boxes = {};
+    state.boxOrder = [];
+    state.rejectedChannels.clear();
+    const refIdx = loc.refChannel - 1;
+    for (const ch of loc.channels) {
+      if (!ch.hasBox) continue;
+      const chIdx = ch.channel - 1;
+      state.boxes[chIdx] = {
+        timeStart: ch.beginTime, timeEnd: ch.endTime, centerTime: ch.centerTime,
+        freqLow: ch.lowFreq, freqHigh: ch.highFreq,
+        active: ch.included, candidate: false,
+      };
+    }
+    // Reference channel goes first so it stays the reference after restore.
+    if (state.boxes[refIdx]) state.boxOrder.push(refIdx);
+    for (const ch of loc.channels) {
+      const chIdx = ch.channel - 1;
+      if (ch.hasBox && chIdx !== refIdx) state.boxOrder.push(chIdx);
+    }
+
+    renderSavedLocalizationsTable();
+    refreshAllWithSuggestions();
+  }
+
+  function updateSaveButtonState(hasValidLocalization) {
+    const btn = $('saveLocalizationBtn');
+    if (btn) btn.disabled = !hasValidLocalization;
+  }
+
+  function updateUndoButtonState(hasSavedLocalizations) {
+    const btn = $('undoSaveBtn');
+    if (btn) btn.disabled = !hasSavedLocalizations;
+  }
+
+  function formatCell(value) {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'boolean') return value ? 'true' : 'false';
+    if (typeof value === 'number') return Number.isInteger(value) ? String(value) : value.toFixed(4);
+    return String(value);
+  }
+
+  // Shared "location output" columns, identical across every row (tall)
+  // or appearing once (wide) for a given localization. Peak Lat/Lon are
+  // null in metric mode (no geographic origin); Peak X/Y are always
+  // populated regardless of input mode, since the underlying math is
+  // always in local meters either way.
+  const SHARED_COLUMNS = [
+    ['peakLat', 'Peak Lat'],
+    ['peakLon', 'Peak Lon'],
+    ['peakX', 'Peak X (m)'],
+    ['peakY', 'Peak Y (m)'],
+    ['peakLikelihood', 'Peak Likelihood'],
+    ['uncertaintyM', 'Spatial Uncertainty (m)'],
+    ['sigma', 'Sigma (s)'],
+    ['soundSpeed', 'Sound Speed (m/s)'],
+    ['gridResolution', 'Grid Resolution'],
+    ['savedAt', 'Saved At'],
+  ];
+
+  // Tall (Raven-selection-table-style): one row per real annotation only
+  // — an unboxed channel has no selection to number, so it's simply
+  // absent, not a blank row (that's what the wide view's blank
+  // sub-columns are for).
+  const TALL_COLUMNS = [
+    ['selection', 'Selection'],
+    ['localizationIndex', 'Localization Index'],
+    ['channel', 'Channel'],
+    ['beginTime', 'Begin Time (s)'],
+    ['endTime', 'End Time (s)'],
+    ['duration', 'Duration (s)'],
+    ['lowFreq', 'Low Freq (Hz)'],
+    ['highFreq', 'High Freq (Hz)'],
+    ['isReference', 'Is Reference'],
+    ...SHARED_COLUMNS,
+  ];
+
+  function buildTallRows() {
+    const rows = [];
+    for (const loc of state.savedLocalizations) {
+      for (const ch of loc.channels) {
+        if (!ch.hasBox) continue; // no real annotation here — omit, don't blank
+        rows.push({
+          selection: ch.selection,
+          localizationIndex: loc.localizationIndex,
+          channel: ch.channel,
+          beginTime: ch.beginTime,
+          endTime: ch.endTime,
+          duration: ch.duration,
+          lowFreq: ch.lowFreq,
+          highFreq: ch.highFreq,
+          included: ch.included,
+          isReference: ch.channel === loc.refChannel,
+          peakLat: loc.peakLat, peakLon: loc.peakLon, peakX: loc.peakX, peakY: loc.peakY, peakLikelihood: loc.peakLikelihood,
+          uncertaintyM: loc.uncertaintyM, sigma: loc.sigma, soundSpeed: loc.soundSpeed,
+          gridResolution: loc.gridResolution, savedAt: loc.savedAt,
+        });
+      }
+    }
+    return rows;
+  }
+
+  // Wide: one row per localization/save. Per-channel fields become
+  // column groups ("Ch1 Begin (s)", "Ch2 Begin (s)", ...); a channel with
+  // no box just leaves its group blank. Reference is a single scalar
+  // column (the channel number) rather than a boolean repeated per row.
+  function maxChannelCount() {
+    return state.savedLocalizations.reduce((m, loc) => Math.max(m, loc.channels.length), 0);
+  }
+
+  // Duration and the frequency band are, by construction, the same across
+  // every channel for an auto-suggested (accepted-candidate) box, since
+  // those inherit the reference box's width/band exactly. A manually
+  // hand-adjusted box on some other channel COULD differ — the wide view
+  // simplifies by showing only the reference channel's values (the one
+  // channel guaranteed present); the tall view still preserves every
+  // channel's actual values individually if that ever matters.
+  function refChannelData(loc) {
+    return loc.channels[loc.refChannel - 1] || null;
+  }
+
+  function wideColumns() {
+    const n = maxChannelCount();
+    const cols = [
+      ['localizationIndex', 'Localization Index'],
+      ['refChannel', 'Reference Channel'],
+      ['duration', 'Duration (s)'],
+      ['lowFreq', 'Low Freq (Hz)'],
+      ['highFreq', 'High Freq (Hz)'],
+      ...SHARED_COLUMNS,
+    ];
+    for (let c = 1; c <= n; c++) cols.push(['ch' + c + '_time', 'Ch' + c + ' Time (s)']);
+    return cols;
+  }
+
+  function buildWideRows() {
+    const n = maxChannelCount();
+    return state.savedLocalizations.map((loc) => {
+      const ref = refChannelData(loc);
+      const row = {
+        localizationIndex: loc.localizationIndex, refChannel: loc.refChannel,
+        duration: ref ? ref.duration : null, lowFreq: ref ? ref.lowFreq : null, highFreq: ref ? ref.highFreq : null,
+        peakLat: loc.peakLat, peakLon: loc.peakLon, peakX: loc.peakX, peakY: loc.peakY, peakLikelihood: loc.peakLikelihood,
+        uncertaintyM: loc.uncertaintyM, sigma: loc.sigma, soundSpeed: loc.soundSpeed,
+        gridResolution: loc.gridResolution, savedAt: loc.savedAt,
+      };
+      for (let c = 1; c <= n; c++) {
+        const chData = loc.channels[c - 1];
+        // Blank both for "never boxed" and "boxed but excluded (OFF)" —
+        // the wide view doesn't distinguish the two; the tall view does.
+        const included = chData && chData.hasBox && chData.included;
+        row['ch' + c + '_time'] = included ? chData.centerTime : null;
+      }
+      return row;
+    });
+  }
+
+  function renderSavedLocalizationsTable() {
+    const section = $('savedLocalizationsSection');
+    const container = $('savedLocalizationsTableWrap');
+    const countEl = $('savedLocalizationsCount');
+    if (!section || !container) return;
+
+    const locs = state.savedLocalizations;
+    updateUndoButtonState(locs.length > 0);
+    section.style.display = locs.length > 0 ? 'block' : 'none';
+    if (locs.length === 0) return;
+
+    document.querySelectorAll('.saved-view-btn').forEach((b) => {
+      b.classList.toggle('is-current', b.dataset.view === state.savedTableView);
+    });
+
+    let columns, rows;
+    if (state.savedTableView === 'tall') {
+      columns = TALL_COLUMNS;
+      rows = buildTallRows();
+      countEl.textContent = locs.length + ' localization' + (locs.length === 1 ? '' : 's') + ', ' + rows.length + ' annotation rows';
+    } else {
+      columns = wideColumns();
+      rows = buildWideRows();
+      countEl.textContent = locs.length + ' localization' + (locs.length === 1 ? '' : 's');
+    }
+
+    const thead = '<thead><tr>' + columns.map(([, label]) => '<th>' + label + '</th>').join('') + '</tr></thead>';
+    const tbody = '<tbody>' + rows.map((row) => {
+      const cells = columns.map(([key]) => '<td>' + formatCell(row[key]) + '</td>').join('');
+      return '<tr>' + cells + '</tr>';
+    }).join('') + '</tbody>';
+
+    container.innerHTML = '<table class="saved-table mono">' + thead + tbody + '</table>';
+  }
+
+  // ---------------------------------------------------------------------
+  // Export: builds delimited text client-side and triggers a normal
+  // browser download (a Blob + temporary link click) — no server involved.
+  // ---------------------------------------------------------------------
+  function escapeDelimited(value, delimiter) {
+    const s = value === null || value === undefined ? '' : String(value);
+    if (s.includes(delimiter) || s.includes('"') || s.includes('\n')) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  }
+
+  function buildDelimitedText(columns, rows, delimiter) {
+    const lines = [columns.map(([, label]) => escapeDelimited(label, delimiter)).join(delimiter)];
+    for (const row of rows) {
+      lines.push(columns.map(([key]) => escapeDelimited(formatCell(row[key]), delimiter)).join(delimiter));
+    }
+    return lines.join('\r\n');
+  }
+
+  function downloadTextFile(filename, text, mimeType) {
+    const blob = new Blob([text], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function audioFileBaseName() {
+    if (!state.audioFileName) return '';
+    const base = state.audioFileName.replace(/\.[^/.]+$/, ''); // strip extension
+    return '_' + base;
+  }
+
+  function exportAll() {
+    if (state.savedLocalizations.length === 0) return;
+    const suffix = audioFileBaseName();
+
+    const wideText = buildDelimitedText(wideColumns(), buildWideRows(), ',');
+    downloadTextFile('localizations_wide' + suffix + '.csv', wideText, 'text/csv');
+
+    // Tab-separated .txt, matching Raven Pro's native Selection Table file
+    // convention, so this can be opened directly in Raven if wanted.
+    const tallText = buildDelimitedText(TALL_COLUMNS, buildTallRows(), '\t');
+    downloadTextFile('localizations_raven' + suffix + '.selections.txt', tallText, 'text/tab-separated-values');
+  }
+
+  // Cheap redraw: blits the cached raster + hyperbolas (heatCanvas) and
+  // markers (markerCanvas) with the current pan/zoom transform applied.
+  // No Gaussian math here — safe to call on every pan/zoom step.
+  function redrawMapView() {
+    const haveGeometry = state.receivers.length > 0 && state.distanceGrids.length > 0;
+    $('mapPlaceholder').style.display = haveGeometry ? 'none' : 'flex';
+
+    const ctx = heatCanvas.getContext('2d');
+    ctx.clearRect(0, 0, heatCanvas.width, heatCanvas.height);
+
+    if (state.mapRasterImage) {
+      ctx.save();
+      applyMapTransform(ctx);
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(state.mapRasterImage, 0, 0, heatCanvas.width, heatCanvas.height);
+
+      // Draw each pair's exact hyperbola (modeled TDoA == measured TDoA)
+      // as a dashed line, so the individual constraints — not just their
+      // blurred product — are visible, including where they intersect.
+      ctx.strokeStyle = cssVar('--map-line');
+      ctx.lineWidth = 1.25;
+      ctx.setLineDash([4, 3]);
+      for (const diffField of state.mapPairDiffFields) {
+        const segments = marchingSquaresContour(diffField, state.gridW, state.gridH);
+        ctx.beginPath();
+        for (const [p1, p2] of segments) {
+          const [wx1, wy1] = gridIndexToWorld(p1[0], p1[1]);
+          const [wx2, wy2] = gridIndexToWorld(p2[0], p2[1]);
+          const [cx1, cy1] = worldToCanvas(wx1, wy1);
+          const [cx2, cy2] = worldToCanvas(wx2, wy2);
+          ctx.moveTo(cx1, cy1);
+          ctx.lineTo(cx2, cy2);
+        }
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    drawMarkers();
+    updateMapBoundsLabels();
+  }
+
+  const LIKELIHOOD_STOPS_DARK = [
+    [18, 24, 30],
+    [24, 92, 96],
+    [79, 216, 196],
+    [230, 250, 240],
+  ];
+  const LIKELIHOOD_STOPS_LIGHT = [
+    [240, 244, 245],
+    [150, 205, 200],
+    [35, 140, 128],
+    [8, 40, 38],
+  ];
+  function likelihoodColor(t) {
+    // Dark mode: near-black -> teal -> warm white at the peak. Light mode:
+    // inverted lightness (near-background -> teal -> dark at the peak),
+    // so the peak stays legible against a light map background instead of
+    // fading toward the same near-white the page itself now uses.
+    const stops = isLightTheme() ? LIKELIHOOD_STOPS_LIGHT : LIKELIHOOD_STOPS_DARK;
+    const scaled = clamp(t, 0, 1) * (stops.length - 1);
+    const i = Math.min(stops.length - 2, Math.floor(scaled));
+    const frac = scaled - i;
+    const a = stops[i], b = stops[i + 1];
+    return [
+      Math.round(a[0] + (b[0] - a[0]) * frac),
+      Math.round(a[1] + (b[1] - a[1]) * frac),
+      Math.round(a[2] + (b[2] - a[2]) * frac),
+    ];
+  }
+
+  function formatLocationText(latLon, xy) {
+    if (latLon) return formatLat(latLon.lat) + ', ' + formatLon(latLon.lon);
+    if (xy) return 'x=' + xy.x.toFixed(1) + 'm, y=' + xy.y.toFixed(1) + 'm';
+    return null;
+  }
+
+  function updateStatusLine(activeChannels, refCh, refTime, maxProduct, peakLatLon) {
+    const el = $('statusLine');
+    const peakLines = [];
+    const detailLines = [];
+
+    if (activeChannels && activeChannels.length >= 2) {
+      const peakLocText = formatLocationText(peakLatLon, state.lastPeakXY);
+      if (peakLocText) peakLines.push('Peak location: <b>' + peakLocText + '</b>');
+      const peakText = maxProduct >= 0.001 ? maxProduct.toFixed(3) : maxProduct.toExponential(2);
+      peakLines.push('Peak joint likelihood (absolute, 0&ndash;1 scale): <b>' + peakText + '</b>');
+    }
+
+    if (state.chanHoEnabled) {
+      if (state.chanHoResult) {
+        const chLatLon = worldToLatLon(state.chanHoResult.x, state.chanHoResult.y);
+        const chLocText = formatLocationText(chLatLon, state.chanHoResult);
+        peakLines.push('Chan-Ho location: <b>' + chLocText + '</b>');
+        if (state.chanHoRmsMs != null) {
+          peakLines.push('Chan-Ho RMS TDoA residual: <b>' + state.chanHoRmsMs.toFixed(2) + ' ms</b>');
+        }
+      } else if (activeChannels && activeChannels.length >= 2) {
+        peakLines.push('Chan-Ho: needs 4+ active channels (has ' + activeChannels.length + ').');
+      }
+    }
+
+    if (!state.audioBuffer) detailLines.push('No audio loaded.');
+    else detailLines.push(state.numChannels + ' channels, ' + state.duration.toFixed(2) + ' s duration.');
+
+    if (state.receivers.length === 0) detailLines.push('No receiver geometry loaded.');
+    else detailLines.push(state.receivers.length + ' receivers loaded (grid ' + state.gridW + '\u00d7' + state.gridH + ').');
+
+    if (activeChannels && activeChannels.length >= 2) {
+      detailLines.push('Reference: <span class="warm">CH' + (refCh + 1) + '</span> @ ' + refTime.toFixed(4) + ' s');
+      for (let k = 1; k < activeChannels.length; k++) {
+        const ch = activeChannels[k];
+        const tdoa = state.boxes[ch].centerTime - refTime;
+        detailLines.push('CH' + (refCh + 1) + '&ndash;CH' + (ch + 1) + ' measured &Delta;t = ' + tdoa.toFixed(4) + ' s');
+      }
+    } else if (state.boxOrder.length === 1) {
+      detailLines.push('One arrival marked (<span class="warm">reference</span>) — mark a second channel to localize.');
+    } else {
+      detailLines.push('Draw an arrival box on two or more channels to localize.');
+    }
+
+    const peakHtml = peakLines.map((l) => '<div>' + l + '</div>').join('');
+    const gapHtml = peakLines.length ? '<div class="status-gap"></div>' : '';
+    const detailHtml = detailLines.map((l) => '<div>' + l + '</div>').join('');
+    el.innerHTML = peakHtml + gapHtml + detailHtml;
+  }
+
+  // ---------------------------------------------------------------------
+  // Sigma / speed controls
+  // ---------------------------------------------------------------------
+  function setSigma(sigma) {
+    state.sigma = sigma;
+    $('sigmaRange').value = Math.log10(sigma);
+    $('sigmaReadout').textContent = sigma < 0.1 ? sigma.toFixed(3) : sigma.toFixed(2);
+  }
+
+  function setSoundSpeed(c) {
+    state.soundSpeed = c;
+    $('speedInput').value = c;
+  }
+
+  $('sigmaRange').addEventListener('input', (e) => {
+    // The slider is log-scaled (log10 seconds) so both millisecond-level
+    // and multi-second uncertainty are easy to reach with one control.
+    const logVal = parseFloat(e.target.value);
+    setSigma(Math.pow(10, logVal));
+    // sigma now drives both the map's likelihood surface AND the
+    // spectrogram feasibility-shading fade width, so a full update is
+    // needed, not just the map. Routed through scheduleUpdate (RAF
+    // -batched) since the slider fires rapidly while dragging — candidate
+    // suggestions are deliberately not regenerated on every tick here,
+    // only once when the drag finishes (the 'change' listener below).
+    scheduleUpdate();
+  });
+  $('sigmaRange').addEventListener('change', () => refreshAllWithSuggestions());
+  $('speedInput').addEventListener('input', (e) => {
+    const v = parseFloat(e.target.value);
+    if (!Number.isNaN(v) && v > 0) {
+      setSoundSpeed(v);
+      // c affects both the likelihood surface and the feasibility windows
+      // (which are dist/c), so a full redraw is needed, not just the heatmap.
+      refreshAllWithSuggestions();
+    }
+  });
+
+  // ---------------------------------------------------------------------
+  // Environment presets
+  // ---------------------------------------------------------------------
+  // Window-length presets scale with environment: short calls in air are
+  // typically well-covered by a 5-20s view, while marine calls/propagation
+  // delays are often usefully viewed over a wider 15-60s window. Only
+  // relabels the buttons — doesn't change whatever window is currently
+  // selected, so a custom or already-chosen length is left alone.
+  const WINDOW_PRESETS_BY_REGIME = { terrestrial: [5, 10, 20], marine: [15, 30, 60] };
+  function setWindowPresetRegime(regime) {
+    const values = WINDOW_PRESETS_BY_REGIME[regime] || WINDOW_PRESETS_BY_REGIME.marine;
+    document.querySelectorAll('.window-btn[data-sec]').forEach((btn, i) => {
+      btn.dataset.sec = values[i];
+      btn.textContent = values[i] + 's';
+    });
+    highlightCurrentWindowPreset();
+  }
+
+  function applyPreset(sigma, c, btnId, regime) {
+    setSigma(sigma);
+    setSoundSpeed(c);
+    document.querySelectorAll('.preset-btn').forEach((b) => b.classList.remove('is-current'));
+    $(btnId).classList.add('is-current');
+    setWindowPresetRegime(regime);
+    refreshAllWithSuggestions();
+  }
+  $('presetAir').addEventListener('click', () => applyPreset(0.05, 343, 'presetAir', 'terrestrial'));
+  $('presetWater').addEventListener('click', () => applyPreset(1, 1480, 'presetWater', 'marine'));
+
+  // ---------------------------------------------------------------------
+  // Spectrogram display controls (contrast, NFFT)
+  // ---------------------------------------------------------------------
+  $('contrastRange').addEventListener('input', (e) => {
+    state.contrast = parseFloat(e.target.value);
+    $('contrastReadout').textContent = state.contrast;
+    recolorSpectrograms();
+  });
+  // Adaptive precision so both fine (44.1kHz-scale) and coarse (sub-kHz
+  // bioacoustics) window durations read sensibly.
+  function formatMs(ms) {
+    if (ms >= 1000) return (ms / 1000).toFixed(2) + ' s';
+    if (ms >= 100) return ms.toFixed(0) + ' ms';
+    if (ms >= 10) return ms.toFixed(1) + ' ms';
+    return ms.toFixed(2) + ' ms';
+  }
+
+  // Shows the NFFT sample count's real-world duration for the currently
+  // loaded file's sample rate — the same "512" means 11.6ms at 44.1kHz
+  // but 2.56s at 200Hz, which isn't obvious from the sample count alone.
+  function updateNfftMsReadout() {
+    const el = $('nfftMsReadout');
+    if (!el) return;
+    el.textContent = state.sampleRate > 0
+      ? '(' + formatMs((state.nfft / state.sampleRate) * 1000) + ')'
+      : '';
+  }
+
+  // A fixed NFFT default (e.g. always 512) means wildly different real
+  // window durations depending on sample rate — 11.6ms at 44.1kHz vs.
+  // 2.56s at 200Hz for the same sample count. Instead, pick whichever of
+  // the slider's available powers of two (2^6..2^12) lands closest to a
+  // 100ms window for this specific file, and sync the slider/readouts to it.
+  function setDefaultNfftForSampleRate(sampleRate) {
+    const targetSamples = sampleRate * 0.1; // 100ms
+    let bestExp = 9, bestDiff = Infinity;
+    for (let exp = 6; exp <= 12; exp++) {
+      const diff = Math.abs(Math.pow(2, exp) - targetSamples);
+      if (diff < bestDiff) { bestDiff = diff; bestExp = exp; }
+    }
+    state.nfft = Math.pow(2, bestExp);
+    $('nfftRange').value = bestExp;
+    $('nfftReadout').textContent = state.nfft;
+    updateNfftMsReadout();
+  }
+
+  $('nfftRange').addEventListener('input', (e) => {
+    const exponent = parseInt(e.target.value, 10);
+    state.nfft = Math.pow(2, exponent);
+    $('nfftReadout').textContent = state.nfft;
+    updateNfftMsReadout();
+    recomputeSpectrograms();
+  });
+
+  // ---------------------------------------------------------------------
+  // Candidate box suggestion controls
+  // ---------------------------------------------------------------------
+  $('correlationModeSelect').addEventListener('change', (e) => {
+    const v = e.target.value;
+    if (v === 'none') {
+      state.autoSuggest = false;
+      // Remove any not-yet-decided candidates immediately rather than
+      // leaving stale suggestions on screen once suggestion is off.
+      for (const ch in state.boxes) {
+        if (state.boxes[ch].candidate) delete state.boxes[ch];
+      }
+      refreshAll();
+    } else {
+      state.autoSuggest = true;
+      state.correlationMode = v;
+      refreshAllWithSuggestions();
+    }
+  });
+
+  // ---------------------------------------------------------------------
+  // Map pan/zoom. Fast path: reuses the cached raster from
+  // computeAndRenderLikelihood and only re-applies the view transform —
+  // no Gaussian recomputation on pan/zoom, so it stays responsive
+  // regardless of grid resolution or receiver count.
+  // ---------------------------------------------------------------------
+  function updateMapZoomUI() {
+    $('mapZoomReadout').textContent = state.mapZoom.toFixed(1) + '\u00d7';
+    markerCanvas.style.cursor = state.mapZoom > 1 ? 'grab' : 'default';
+    $('mapZoomOut').disabled = state.mapZoom <= 1;
+  }
+
+  function setMapZoom(newZoom) {
+    state.mapZoom = clamp(newZoom, 1, 8);
+    setMapPan(state.mapPanX, state.mapPanY); // re-clamp pan to the new zoom's bounds
+    updateMapZoomUI();
+    redrawMapView();
+  }
+
+  $('mapZoomIn').addEventListener('click', () => setMapZoom(state.mapZoom * 1.5));
+  $('mapZoomOut').addEventListener('click', () => setMapZoom(state.mapZoom / 1.5));
+  updateMapZoomUI();
+
+  let mapRedrawPending = false;
+  function scheduleMapRedraw() {
+    if (mapRedrawPending) return;
+    mapRedrawPending = true;
+    requestAnimationFrame(() => {
+      mapRedrawPending = false;
+      redrawMapView();
+    });
+  }
+
+  (function attachMapPanDrag() {
+    let dragging = null; // {startClientX, startClientY, startPanX, startPanY}
+
+    function clientDeltaToInternal(dxClient, dyClient) {
+      const rect = markerCanvas.getBoundingClientRect();
+      const scaleX = markerCanvas.width / rect.width;
+      const scaleY = markerCanvas.height / rect.height;
+      return [dxClient * scaleX, dyClient * scaleY];
+    }
+
+    function clientXY(evt) {
+      return evt.touches
+        ? [evt.touches[0].clientX, evt.touches[0].clientY]
+        : [evt.clientX, evt.clientY];
+    }
+
+    function pointerDown(evt) {
+      if (state.mapZoom <= 1) return; // nothing to pan when fully zoomed out
+      evt.preventDefault();
+      const [clientX, clientY] = clientXY(evt);
+      dragging = { startClientX: clientX, startClientY: clientY, startPanX: state.mapPanX, startPanY: state.mapPanY };
+      markerCanvas.style.cursor = 'grabbing';
+      window.addEventListener('mousemove', pointerMove);
+      window.addEventListener('mouseup', pointerUp);
+      window.addEventListener('touchmove', pointerMove, { passive: false });
+      window.addEventListener('touchend', pointerUp);
+    }
+
+    function pointerMove(evt) {
+      if (!dragging) return;
+      evt.preventDefault();
+      const [clientX, clientY] = clientXY(evt);
+      const [dx, dy] = clientDeltaToInternal(clientX - dragging.startClientX, clientY - dragging.startClientY);
+      setMapPan(dragging.startPanX + dx, dragging.startPanY + dy);
+      scheduleMapRedraw();
+    }
+
+    function pointerUp() {
+      dragging = null;
+      markerCanvas.style.cursor = state.mapZoom > 1 ? 'grab' : 'default';
+      window.removeEventListener('mousemove', pointerMove);
+      window.removeEventListener('mouseup', pointerUp);
+      window.removeEventListener('touchmove', pointerMove);
+      window.removeEventListener('touchend', pointerUp);
+    }
+
+    markerCanvas.addEventListener('mousedown', pointerDown);
+    markerCanvas.addEventListener('touchstart', pointerDown, { passive: false });
+  })();
+
+  // ---------------------------------------------------------------------
+  // Long-recording navigation: a fixed-length viewing window plus a
+  // scrollbar to slide it across the file. Panning/zooming only ever
+  // changes state.viewStart/windowLength and re-blits the already
+  // -computed spectrogram bitmaps (see drawChannelCanvas) — no FFT work,
+  // so it stays cheap regardless of file length.
+  // ---------------------------------------------------------------------
+  function highlightCurrentWindowPreset() {
+    document.querySelectorAll('.window-btn').forEach((b) => b.classList.remove('is-current'));
+    const isFull = !(state.windowLength > 0) || state.windowLength >= state.duration;
+    if (isFull) {
+      $('windowFullBtn').classList.add('is-current');
+      return;
+    }
+    const match = document.querySelector('.window-btn[data-sec="' + state.windowLength + '"]');
+    if (match) match.classList.add('is-current');
+  }
+
+  function setWindowLength(sec) {
+    const dur = state.duration || 0;
+    if (dur <= 0) return;
+    state.windowLength = clamp(sec, 0.1, dur);
+    // keep the current start where it is, just clamp to the new bounds
+    state.viewStart = clamp(state.viewStart, 0, Math.max(0, dur - state.windowLength));
+    syncScrubbar();
+    highlightCurrentWindowPreset();
+    redrawAllChannels();
+  }
+
+  document.querySelectorAll('.window-btn[data-sec]').forEach((btn) => {
+    btn.addEventListener('click', () => setWindowLength(parseFloat(btn.dataset.sec)));
+  });
+  $('windowFullBtn').addEventListener('click', () => setWindowLength(state.duration || 0));
+  $('windowCustomInput').addEventListener('change', (e) => {
+    const v = parseFloat(e.target.value);
+    if (!Number.isNaN(v) && v > 0) setWindowLength(v);
+  });
+
+  // Sizes and positions the custom thumb: width proportional to
+  // windowLength/duration (floored at 24px so it stays grabbable at
+  // extreme zoom), left position proportional to viewStart. Called
+  // whenever duration/windowLength/viewStart change, or on resize.
+  function syncScrubbar() {
+    const container = $('scrubContainer');
+    const thumb = $('scrubThumb');
+    const dur = state.duration || 0;
+    const win = (state.windowLength > 0 && state.windowLength < dur) ? state.windowLength : dur;
+
+    if (dur <= 0 || win <= 0 || win >= dur) {
+      thumb.style.left = '0px';
+      thumb.style.width = '100%';
+      return;
+    }
+
+    const trackWidth = container.clientWidth || 1;
+    const thumbWidth = Math.max((win / dur) * trackWidth, 24);
+    const maxLeft = Math.max(0, trackWidth - thumbWidth);
+    const frac = (dur - win) > 0 ? state.viewStart / (dur - win) : 0;
+
+    thumb.style.width = thumbWidth + 'px';
+    thumb.style.left = (frac * maxLeft) + 'px';
+  }
+
+  // Scroll/drag can fire rapidly; batch to one redraw per animation
+  // frame. Only the spectrograms need to move — the likelihood map
+  // doesn't depend on the view window at all.
+  let channelRedrawPending = false;
+  function scheduleChannelRedraw() {
+    if (channelRedrawPending) return;
+    channelRedrawPending = true;
+    requestAnimationFrame(() => {
+      channelRedrawPending = false;
+      redrawAllChannels();
+    });
+  }
+
+  // Custom drag handling for the thumb — deliberately not a native
+  // scrollbar (see the CSS comment above for why). Clicking anywhere on
+  // the track jumps the thumb to center there; dragging (from the thumb
+  // or from that same initial click) pans continuously.
+  (function attachScrubDrag() {
+    const container = $('scrubContainer');
+    const thumb = $('scrubThumb');
+    let dragging = false;
+    let dragOffsetPx = 0; // cursor position relative to the thumb's left edge, at drag start
+
+    function thumbWidthPx() {
+      const dur = state.duration || 0;
+      const win = (state.windowLength > 0 && state.windowLength < dur) ? state.windowLength : dur;
+      const trackWidth = container.clientWidth || 1;
+      if (dur <= 0 || win <= 0 || win >= dur) return trackWidth;
+      return Math.max((win / dur) * trackWidth, 24);
+    }
+
+    function setViewStartFromThumbLeftPx(leftPx) {
+      const dur = state.duration || 0;
+      const win = (state.windowLength > 0 && state.windowLength < dur) ? state.windowLength : dur;
+      if (dur <= 0 || win <= 0 || win >= dur) return;
+      const trackWidth = container.clientWidth || 1;
+      const maxLeft = Math.max(0, trackWidth - thumbWidthPx());
+      const clampedLeft = clamp(leftPx, 0, maxLeft);
+      const frac = maxLeft > 0 ? clampedLeft / maxLeft : 0;
+      state.viewStart = clamp(frac * (dur - win), 0, dur - win);
+      thumb.style.left = clampedLeft + 'px';
+    }
+
+    function pointerX(evt) {
+      const rect = container.getBoundingClientRect();
+      const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+      return clientX - rect.left;
+    }
+
+    function pointerDown(evt) {
+      const dur = state.duration || 0;
+      const win = (state.windowLength > 0 && state.windowLength < dur) ? state.windowLength : dur;
+      if (dur <= 0 || win <= 0 || win >= dur) return; // nothing to scroll
+      evt.preventDefault();
+
+      const x = pointerX(evt);
+      const curLeft = parseFloat(thumb.style.left) || 0;
+      const tw = thumbWidthPx();
+      if (x < curLeft || x > curLeft + tw) {
+        // clicked the track outside the thumb: jump so the thumb centers there
+        setViewStartFromThumbLeftPx(x - tw / 2);
+        scheduleChannelRedraw();
+      }
+
+      dragging = true;
+      thumb.classList.add('dragging');
+      dragOffsetPx = x - (parseFloat(thumb.style.left) || 0);
+      window.addEventListener('mousemove', pointerMove);
+      window.addEventListener('mouseup', pointerUp);
+      window.addEventListener('touchmove', pointerMove, { passive: false });
+      window.addEventListener('touchend', pointerUp);
+    }
+
+    function pointerMove(evt) {
+      if (!dragging) return;
+      evt.preventDefault();
+      setViewStartFromThumbLeftPx(pointerX(evt) - dragOffsetPx);
+      scheduleChannelRedraw();
+    }
+
+    function pointerUp() {
+      dragging = false;
+      thumb.classList.remove('dragging');
+      window.removeEventListener('mousemove', pointerMove);
+      window.removeEventListener('mouseup', pointerUp);
+      window.removeEventListener('touchmove', pointerMove);
+      window.removeEventListener('touchend', pointerUp);
+    }
+
+    container.addEventListener('mousedown', pointerDown);
+    container.addEventListener('touchstart', pointerDown, { passive: false });
+  })();
+
+  window.addEventListener('resize', () => {
+    if (state.audioBuffer) syncScrubbar();
+  });
+
+  // ---------------------------------------------------------------------
+  // Light / dark theme toggle. Only the page chrome (panels, text,
+  // borders, controls) is theme-linked — the spectrogram and map
+  // displays stay on their fixed dark "instrument" background regardless
+  // (see the --instrument-bg comment in :root).
+  // ---------------------------------------------------------------------
+  function currentTheme() {
+    return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+  }
+  function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    $('themeToggle').textContent = theme === 'light' ? '🌙' : '☀️';
+    $('themeToggle').setAttribute('data-tooltip', 'Switch to ' + (theme === 'light' ? 'dark' : 'light') + ' theme');
+    try { localStorage.setItem('tdoa-theme', theme); } catch (err) { /* ignore */ }
+    // Both colormaps (spectrogram and map heatmap) are theme-aware, so
+    // existing content needs recoloring — not recomputing, just
+    // recoloring already-cached data, so this stays cheap regardless of
+    // file length or grid resolution.
+    recolorSpectrograms();
+    if (state.mapProductGrid) {
+      state.mapRasterImage = buildMapRasterFromProduct(state.mapProductGrid);
+      redrawMapView();
+    }
+  }
+  setTheme(currentTheme()); // sync the button icon to whatever the <head> script already applied
+  $('themeToggle').addEventListener('click', () => setTheme(currentTheme() === 'light' ? 'dark' : 'light'));
+
+  // ---------------------------------------------------------------------
+  // Hover tooltips for parameter controls. Delegated on document so any
+  // element with a data-tooltip attribute works automatically, and
+  // e.target.closest('[data-tooltip]') means a more specific inner
+  // element (e.g. a preset button) naturally wins over a more general
+  // outer wrapper (e.g. its containing .control group) when both have
+  // one. Positioned via getBoundingClientRect into a `position: fixed`
+  // element outside the panels, so it can't be clipped by their
+  // overflow-y: auto scroll boundary.
+  // ---------------------------------------------------------------------
+  (function setupTooltips() {
+    const popup = $('tooltipPopup');
+    let currentTarget = null;
+
+    function showTooltip(target) {
+      const text = target.getAttribute('data-tooltip');
+      if (!text) return;
+      popup.textContent = text;
+      popup.style.display = 'block';
+      popup.classList.remove('visible');
+
+      const rect = target.getBoundingClientRect();
+      const popupRect = popup.getBoundingClientRect();
+
+      let left = rect.left + rect.width / 2 - popupRect.width / 2;
+      left = clamp(left, 8, window.innerWidth - popupRect.width - 8);
+
+      let top = rect.top - popupRect.height - 10;
+      let below = false;
+      if (top < 8) { // not enough room above — place below instead
+        top = rect.bottom + 10;
+        below = true;
+      }
+
+      popup.style.left = left + 'px';
+      popup.style.top = top + 'px';
+      popup.classList.toggle('arrow-above', !below);
+      popup.classList.toggle('arrow-below', below);
+      const arrowLeft = clamp(rect.left + rect.width / 2 - left, 12, popupRect.width - 12);
+      popup.style.setProperty('--arrow-left', arrowLeft + 'px');
+
+      requestAnimationFrame(() => popup.classList.add('visible'));
+    }
+
+    function hideTooltip() {
+      popup.classList.remove('visible');
+      popup.style.display = 'none';
+      currentTarget = null;
+    }
+
+    document.addEventListener('mouseover', (e) => {
+      const target = e.target.closest('[data-tooltip]');
+      if (!target || target === currentTarget) return;
+      currentTarget = target;
+      showTooltip(target);
+    });
+    document.addEventListener('mouseout', (e) => {
+      const target = e.target.closest('[data-tooltip]');
+      if (!target || target !== currentTarget) return;
+      if (target.contains(e.relatedTarget)) return; // moved to a child, not actually leaving
+      hideTooltip();
+    });
+
+    // Keyboard-focus support, for accessibility when tabbing through controls.
+    document.addEventListener('focusin', (e) => {
+      const target = e.target.closest('[data-tooltip]');
+      if (!target || target === currentTarget) return;
+      currentTarget = target;
+      showTooltip(target);
+    });
+    document.addEventListener('focusout', (e) => {
+      const target = e.target.closest('[data-tooltip]');
+      if (!target || target !== currentTarget) return;
+      hideTooltip();
+    });
+
+    window.addEventListener('scroll', hideTooltip, true);
+  })();
+
+  updateStatusLine();
+
+  // ---------------------------------------------------------------------
+  // Example data: on open, load a North Atlantic right whale recording and
+  // its hydrophone positions, so there is something to explore right away.
+  // Uploading your own WAV/CSV replaces them. Needs to be served over http
+  // (fetch() is blocked for file:// pages), so it silently does nothing
+  // when the page is opened straight from disk.
+  // ---------------------------------------------------------------------
+  const EXAMPLE = {
+    audio: 'data/narw_example_20190220_3min_1kHz.wav',
+    csv: 'data/narw_hydlocs.csv',
+  };
+  (async function loadExample() {
+    try {
+      const [audioRes, csvRes] = await Promise.all([fetch(EXAMPLE.audio), fetch(EXAMPLE.csv)]);
+      if (!audioRes.ok || !csvRes.ok) return;
+      const name = (path) => path.split('/').pop();
+      $('audioStatus').textContent = 'Loading example ' + name(EXAMPLE.audio) + '...';
+      await loadAudioFile(new File([await audioRes.blob()], name(EXAMPLE.audio)));
+      loadCsvFile(new File([await csvRes.blob()], name(EXAMPLE.csv)));
+    } catch (err) {
+      // No example available; the upload buttons still work as usual.
+    }
+  })();
+})();
+</script>
+</body>
+</html>

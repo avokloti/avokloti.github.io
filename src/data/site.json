@@ -18,10 +18,6 @@
   ],
   "nav": [
     {
-      "label": "CV",
-      "href": "/cv/"
-    },
-    {
       "label": "Research",
       "href": "/research/"
     },

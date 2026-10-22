@@ -31,6 +31,13 @@ def signature(im):
             best, score = rgb, sc
     return best
 
+def dark_tone(rgb, light, min_sat):
+    # Keep the photo color's hue, but set it to a fixed dark lightness with enough
+    # saturation to read as a color rather than near-black.
+    h, l, sat = colorsys.rgb_to_hls(*[c / 255 for c in rgb])
+    r, g, b = colorsys.hls_to_rgb(h, light, max(sat, min_sat) * 0.9)
+    return '#%02x%02x%02x' % (round(r * 255), round(g * 255), round(b * 255))
+
 def mix(a, b, t):  # t = share of a
     return '#%02x%02x%02x' % tuple(round(a[i] * t + b[i] * (1 - t)) for i in range(3))
 
@@ -41,7 +48,7 @@ for p in sorted(pathlib.Path('public/images/banners').glob('*.jpg')):
     accent = lift(signature(im), 1.1)      # the photo's signature color
     out[f'/images/banners/{p.name}'] = {
         'light': [mix(ground, (255, 255, 255), 0.26), mix(accent, (255, 255, 255), 0.16)],
-        'dark': [mix(ground, (16, 22, 20), 0.30), mix(accent, (16, 22, 20), 0.20)],
+        'dark': [dark_tone(ground, 0.24, 0.30), dark_tone(accent, 0.21, 0.35)],
     }
 json.dump(out, open('src/data/banner-colors.json', 'w'), indent=2)
 print(json.dumps(out, indent=1))

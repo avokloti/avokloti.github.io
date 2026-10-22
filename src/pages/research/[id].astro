@@ -3,7 +3,8 @@ import { getCollection, render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import themes from '../../data/research-themes.json';
 import NewsList from '../../components/NewsList.astro';
-import { newsFor, articleSections } from '../../lib/data';
+import ToolList from '../../components/ToolList.astro';
+import { newsFor, articleSections, toolsFor } from '../../lib/data';
 
 export async function getStaticPaths() {
   const projects = await getCollection('projects');
@@ -25,5 +26,8 @@ const theme = themes.find((t) => t.id === project.data.theme)!;
   ))}
   {newsFor(project.id).length > 0 && (
     <section class="prose pd__news"><h3>In the news</h3><NewsList items={newsFor(project.id)} /></section>
+  )}
+  {toolsFor(project.id).length > 0 && (
+    <section class="prose pd__news"><h3>Interactive tools</h3><ToolList items={toolsFor(project.id)} /></section>
   )}
 </Base>

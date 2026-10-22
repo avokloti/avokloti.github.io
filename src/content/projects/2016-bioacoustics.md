@@ -4,6 +4,7 @@ excerpt: "Research project through NSF REU, summer of 2016, with Prof. Ryan Kast
 image: "/images/whales_figure.jpg"
 theme: "quantitative-ecology"
 year: 2016
+summary: "Automated classification of humpback whale social calls, using spectrogram-based features and a hidden Markov model. Presented at the 2017 meeting of the Acoustical Society of America."
 ---
 *This project was done in the summer of 2016 through an NSF REU program at the Hatfield Marine Science Center. I worked with Lisa Bauer and Hongyi Zhao, with support from Prof. Ryan Kastner and Alric Althoff.*
 

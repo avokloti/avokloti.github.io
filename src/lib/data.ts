@@ -1,19 +1,15 @@
 import { parse } from 'yaml';
 import pubsRaw from '../data/publications.yaml?raw';
-import cvRaw from '../data/cv.yaml?raw';
 import mentorshipRaw from '../data/mentorship.yaml?raw';
 import newsRaw from '../data/news.yaml?raw';
 import teachingRaw from '../data/teaching.yaml?raw';
+import toolsRaw from '../data/tools.yaml?raw';
 
 export type Publication = {
   id: string; type: string; year?: number; authors: string; title: string;
   venue?: string; short_venue?: string; author_count?: number; links?: { label: string; url: string }[];
 };
 export const publications: Publication[] = parse(pubsRaw);
-export const cv = parse(cvRaw) as {
-  updated: string;
-  sections: { title: string; compact?: boolean; items: { when: string; what: string; where?: string; detail?: string }[] }[];
-};
 
 export const mentorship = parse(mentorshipRaw) as {
   intro: string;
@@ -57,3 +53,8 @@ export const articleSections = (ids: string[] = [], thumb?: string) => {
     { heading: 'Reports', items: pubs.filter((p) => p.type === 'report').map(item) },
   ].filter((s) => s.items.length > 0);
 };
+
+/** Interactive demos (src/data/tools.yaml). */
+export type Tool = { title: string; short?: string; url: string; icon?: string; image?: string; description: string; home?: boolean; projects?: string[] };
+export const tools: Tool[] = parse(toolsRaw) ?? [];
+export const toolsFor = (projectId: string) => tools.filter((t) => t.projects?.includes(projectId));

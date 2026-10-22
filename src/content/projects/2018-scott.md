@@ -4,6 +4,7 @@ excerpt: "Older project with Prof. Scott Kuindersma of the Harvard Agile Robotic
 image: "/images/traj_optimization_figure.jpg"
 theme: "robotics"
 year: 2018
+summary: "A trajectory optimization framework based on consensus ADMM that exploits structure shared across robot planning problems. Demonstrated on quadrotor, Kuka arm, and RoboBee systems with nonconvex constraints, and compared against SNOPT and IPOPT."
 ---
 
 *This project was done under the guidance of Prof. Scott Kuindersma at the [Agile Robotics Laboratory](https://agile.seas.harvard.edu/) at Harvard.*

@@ -1,0 +1,28 @@
+# Interactive demos hosted on the site. Put each tool's .html file in public/tools/.
+#   home: true      also list it on the home page, under Research
+#   projects: [...] list it under these Research projects (their file names)
+#   icon:           a Font Awesome icon name already loaded in src/lib/icons.ts
+#   image:          a thumbnail in public/images/ (used instead of the icon when given)
+#   short:          the shorter title used on the home page's Demos cards
+
+- title: TDoA Localization Explorer
+  short: TDoA Localization
+  url: /tools/localization-explorer.html
+  icon: location-crosshairs
+  image: /images/tools/localization-explorer.jpg
+  description: >-
+    How does time-difference-of-arrival localization work? Try out this interactive tool to visualize the geometry underlying localization, with an example right whale recording
+    or your own synchronized audio.
+  home: true
+  projects: [2024-bowheads]
+
+- title: Source Separation Explorer
+  short: Source Separation
+  url: /tools/source-separation.html
+  icon: wave-square
+  image: /images/tools/source-separation.jpg
+  description: >-
+    Compact tetrahedral arrays can be effectively separate sound sources emitted from different directions.
+    Try out this interactive tool to scan across through space, with a sample I recorded at a wildlife refuge in Colorado.
+  home: true
+  projects: [2022-wild_soundscapes]

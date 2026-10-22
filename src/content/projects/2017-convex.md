@@ -4,6 +4,7 @@ excerpt: "Undergraduate thesis for Computer Science Honors at the University of 
 image: "/images/convexification_figure.jpg"
 theme: "robotics"
 year: 2017
+summary: "Adapting successive convexification for real-time trajectory planning on quadrotor drones. My undergraduate honors thesis in computer science at the University of Washington."
 ---
 *This project was done under the supervision of Daniel Dueri and Prof. Behcet Acikmese at the Autonomous Control Laboratory, and Prof. Dieter Fox at the Robotics and State Estimation Laboratory.*
 

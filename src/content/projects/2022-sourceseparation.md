@@ -1,9 +1,11 @@
 ---
-title: "Source Separation with an Acoustic Vector Sensor for Terrestrial Bioacoustics"
-excerpt: "Research project in collaboration with the K. Lisa Yang Center for Conservation Bioacoustics."
+title: "Source Separation (Experimental Evaluation)"
+excerpt: ""
 image: "/images/source_separation.jpg"
 theme: "terrestrial"
 year: 2022
+summary: "An acoustic vector-sensor streamlines direction-of-arrival (DoA) estimation and thereby source separation. In this work, I evaluated different algorithms for DoA estimation, both in simulation and experiment."
+articles: ["tolkova-2022-avs"]
 ---
 
 *This work is published in JASA and can be accessed [here](https://doi.org/10.1121/10.0013505).*

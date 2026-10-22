@@ -24,7 +24,7 @@
   let list = [], i = 0;
   const show = () => {
     const a = list[i];
-    img.src = a.getAttribute('href'); img.alt = a.dataset.title || '';
+    img.src = a.getAttribute('href'); img.alt = a.dataset.alt || a.dataset.title || '';
     box.querySelector('.lb-title').textContent = a.dataset.title || '';
     box.querySelector('.lb-count').textContent = list.length > 1 ? `${i + 1} of ${list.length}` : '';
     if (a.hasAttribute('data-fullsize')) { full.href = a.getAttribute('href'); full.hidden = false; } else full.hidden = true;

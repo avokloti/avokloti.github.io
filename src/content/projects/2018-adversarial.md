@@ -4,6 +4,7 @@ excerpt: "Class project for CS 282R: Robust Machine Learning, spring semester of
 image: "/images/adversarial_noise_figure.jpg"
 theme: "other"
 year: 2018
+summary: "Training a classifier to detect images corrupted by adversarial noise, using multilayer perceptrons on MNIST. A class project for Robust Machine Learning, with Sharon Qian."
 ---
 *This is a final project for the course CS 282R: "Robust Machine Learning" taught by Prof. Yaron Singer in the spring semester of 2018, done with Sharon Qian.*
 

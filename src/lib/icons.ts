@@ -9,6 +9,9 @@ import robot from '@fortawesome/fontawesome-free/svgs/solid/robot.svg?raw';
 import shapes from '@fortawesome/fontawesome-free/svgs/solid/shapes.svg?raw';
 import house from '@fortawesome/fontawesome-free/svgs/solid/house.svg?raw';
 import envelope from '@fortawesome/fontawesome-free/svgs/solid/envelope.svg?raw';
+import fileArrowDown from '@fortawesome/fontawesome-free/svgs/solid/file-arrow-down.svg?raw';
+import locationCrosshairs from '@fortawesome/fontawesome-free/svgs/solid/location-crosshairs.svg?raw';
+import waveSquare from '@fortawesome/fontawesome-free/svgs/solid/wave-square.svg?raw';
 import mountain from '@fortawesome/fontawesome-free/svgs/solid/mountain.svg?raw';
 import squareRootVariable from '@fortawesome/fontawesome-free/svgs/solid/square-root-variable.svg?raw';
 
@@ -20,5 +23,5 @@ const clean = (svg: string) => {
 };
 
 export const icons: Record<string, string> = Object.fromEntries(
-  Object.entries({ github, scholar, water, seedling, paw, robot, shapes, house, envelope, mountain, 'square-root-variable': squareRootVariable }).map(([k, v]) => [k, clean(v)]),
+  Object.entries({ github, scholar, water, seedling, paw, robot, shapes, house, envelope, mountain, 'square-root-variable': squareRootVariable, 'file-arrow-down': fileArrowDown, 'location-crosshairs': locationCrosshairs, 'wave-square': waveSquare }).map(([k, v]) => [k, clean(v)]),
 );

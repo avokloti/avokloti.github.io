@@ -72,15 +72,15 @@ const sets = [
         <h2>{set.title}</h2>
         {set.id === 'drawings' && <p class="muted">I mostly sketch in pen and pencil, sometimes wandering to digital illustration, and have painted in oil and pastel. Here are some wildlife sketches, and a charcoal portrait of my grandfather.</p>}
         {set.id === 'photography' && (
-          <p class="muted">During my PhD, I co-founded and led Harvard’s graduate photography society for a few years, organizing trips, competitions, guest speakers, and photographing events across campus.</p>
+          <p class="muted">During my PhD, I co-founded and led Harvard’s graduate photography society for a few years, organizing trips, competitions, guest speakers, and photographing events across campus. My camera has traveled with me around the world, to mountain summits and treetops. I also gladly volunteer to take photos for non-profits; most recently for Ithaca's local community kitchen <em>Loaves and Fishes</em>. </p>
         )}
       </div>
       <ul class="masonry" data-gallery>
         {set.items.map((it) => (
           <li>
-            <a class="art" href={`/images/${it.dir}/${it.slug}.jpg`} data-lightbox data-title={it.title}>
-              <img src={`/images/${it.dir}/${it.slug}-thumb.jpg`} width={it.w} height={it.h} alt={it.title} loading="lazy" />
-              <span>{it.title}</span>
+            <a class="art" href={`/images/${it.dir}/${it.slug}.jpg`} data-lightbox data-title={it.title} data-alt={it.alt ?? it.title}>
+              <img src={`/images/${it.dir}/${it.slug}-thumb.jpg`} width={it.w} height={it.h} alt={it.alt ?? it.title} loading="lazy" />
+              {it.title && <span>{it.title}</span>}
             </a>
           </li>
         ))}
