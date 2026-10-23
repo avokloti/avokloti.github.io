@@ -581,3 +581,22 @@ html:has(.pd[open]) { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { .demo-card__thumb img { transition: none; } }
 .demo-cards--wide { grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1.75rem 1.5rem; }
 .demo-card__blurb { display: block; margin-top: 0.2rem; color: var(--muted); font-size: 1rem; line-height: 1.5; }
+
+/* Light/dark switch at the right end of the top bar */
+.theme-toggle {
+  order: 3; align-self: center; display: inline-grid; place-items: center;
+  width: 2.1rem; height: 2.1rem; padding: 0; border-radius: 999px; cursor: pointer;
+  color: var(--muted); background: transparent; border: 1px solid var(--rule);
+}
+.theme-toggle:hover { color: var(--ink); border-color: var(--muted); }
+.theme-toggle svg { width: 0.95rem; height: 0.95rem; }
+.theme-toggle__sun { display: none; }
+:root[data-theme="dark"] .theme-toggle__sun { display: block; }
+:root[data-theme="dark"] .theme-toggle__moon { display: none; }
+.masthead nav { order: 2; margin-left: auto; }
+.wordmark { order: 1; }
+.masthead__inner { column-gap: 1.25rem; }
+@media (max-width: 48rem) {
+  .theme-toggle { order: 2; margin-left: auto; }
+  .masthead nav { order: 3; flex-basis: 100%; margin-left: 0; }
+}

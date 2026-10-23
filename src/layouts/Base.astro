@@ -29,12 +29,19 @@ const isCurrent = (href: string) => {
 };
 ---
 <!doctype html>
-<html lang="en" data-palette={site.palette}>
+<html lang="en" data-palette={site.palette} data-theme="light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="claude:viewport-fit-sides" content="cover" />
+    <script is:inline>
+      // Light by default; a visitor's own choice (from the switch in the top bar) is remembered.
+      try { if (localStorage.getItem('theme') === 'dark') document.documentElement.dataset.theme = 'dark'; } catch (e) {}
+    </script>
     <title>{pageTitle}</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="description" content={description} />
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} />
@@ -66,8 +73,25 @@ const isCurrent = (href: string) => {
             ))}
           </ul>
         </nav>
+        <button class="theme-toggle" type="button" aria-label="Switch to dark mode">
+          <span class="theme-toggle__moon" aria-hidden="true"><Fragment set:html={icons.moon} /></span>
+          <span class="theme-toggle__sun" aria-hidden="true"><Fragment set:html={icons.sun} /></span>
+        </button>
       </div>
     </header>
+    <script is:inline>
+      (() => {
+        const root = document.documentElement;
+        const btn = document.querySelector('.theme-toggle');
+        const label = () => btn.setAttribute('aria-label', root.dataset.theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+        label();
+        btn.addEventListener('click', () => {
+          root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+          try { localStorage.setItem('theme', root.dataset.theme); } catch (e) {}
+          label();
+        });
+      })();
+    </script>
 
     <div class:list={['tint', { 'tint--on': tint }]} style={tintStyle}>
       {banner && (
